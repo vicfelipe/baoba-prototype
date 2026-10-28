@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Baobá — O Eco da Mata</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Sans:wght@500;700;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <div id="hud" class="hidden">
+    <div id="vignette"></div>
+    <div id="pulseFlash"></div>
+    <div id="labels"></div>
+    <div id="fxLayer"></div>
+
+    <!-- Moldura do jogador (canto superior esquerdo, como no Lunia) -->
+    <div id="playerFrame">
+      <div class="badge"><img id="pPortrait" alt="" /></div>
+      <div class="info">
+        <div class="row"><span class="name">Capoeirista</span><span class="hearts">DPS Melee</span></div>
+        <div class="bar hp"><div class="ghost"></div><div class="fill"></div><span class="val">100/100</span></div>
+        <div class="bar dodge"><div class="fill"></div></div>
+      </div>
+    </div>
+
+    <!-- Alvo selecionado (leitura de alvo à Tarisland) -->
+    <div id="targetFrame" class="hidden">
+      <div class="badge small"><img id="tPortrait" alt="" /></div>
+      <div class="info">
+        <div class="row"><span id="tName" class="name">Alvo</span><span id="tKind" class="hearts"></span></div>
+        <div class="bar target"><div class="ghost"></div><div class="fill"></div><span class="val"></span></div>
+      </div>
+    </div>
+
+    <!-- Minimapa e ajuda da missão (canto superior direito) -->
+    <div id="mapPanel">
+      <canvas id="minimap" width="200" height="200"></canvas>
+      <div id="areaName">Mata Viva</div>
+    </div>
+    <div id="objectives">
+      <h3>Ajuda da Missão</h3>
+      <div class="quest" id="questName">O Eco da Mata</div>
+      <ul id="objList"></ul>
+    </div>
+
+    <div id="banner"></div>
+    <div id="hint"></div>
+    <div id="toast"></div>
+    <div id="interact"><kbd>F</kbd> <span></span></div>
+
+    <!-- Registro (canto inferior esquerdo) -->
+    <div id="log">
+      <div class="tabs"><span class="on">Todos</span><span>Sistema</span><span>Combate</span></div>
+      <ul id="logList"></ul>
+    </div>
+
+    <!-- Barra do chefe e conjuração -->
+    <div id="bossBar" class="hidden">
+      <div id="castBar" class="hidden">
+        <div class="fill"></div>
+        <span class="label"><svg viewBox="0 0 24 24" class="shield"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z"/></svg> Chamado do Silêncio — <b>Interromper (Q)</b></span>
+      </div>
+      <div class="bar boss"><div class="ghost"></div><div class="fill"></div><span class="val"><b id="bossName">Curupira corrompido</b> <span id="bossVal"></span></span></div>
+    </div>
+
+    <!-- Barra de habilidades -->
+    <div id="skillbar">
+      <div class="slot" data-skill="combo">
+        <svg viewBox="0 0 48 48"><path d="M10 34c6-2 10-8 12-16l6 2c-1 9-7 17-16 20z" /><path d="M24 14c4-6 12-8 16-4-4 0-8 2-10 7z" /><circle cx="36" cy="30" r="5" /></svg>
+        <kbd>J</kbd><div class="pips"><i></i><i></i><i></i></div>
+      </div>
+      <div class="slot" data-skill="rasteira">
+        <svg viewBox="0 0 48 48"><path d="M6 36h36v4H6z" /><path d="M8 32c8-10 22-12 34-6l-2 4c-10-4-20-3-28 4z" /><circle cx="14" cy="18" r="5" /></svg>
+        <kbd>Q</kbd><div class="cd"></div><span class="cdText"></span>
+      </div>
+      <div class="slot" data-skill="meialua">
+        <svg viewBox="0 0 48 48"><path d="M30 6a18 18 0 1 0 12 30A15 15 0 1 1 30 6z" /></svg>
+        <kbd>E</kbd><div class="cd"></div><span class="cdText"></span>
+      </div>
+      <div class="slot" data-skill="dodge">
+        <svg viewBox="0 0 48 48"><path d="M6 30c10 0 16-8 30-8v-6l8 10-8 10v-6c-12 0-18 6-30 6z" /><path d="M6 20c6 0 10-3 16-5l2 4c-6 2-10 5-18 5z" opacity=".6" /></svg>
+        <kbd>Shift</kbd><div class="cd"></div><span class="cdText"></span>
+      </div>
+      <div class="slot small" data-skill="jump">
+        <svg viewBox="0 0 48 48"><path d="M24 6l12 14h-8v14h-8V20h-8z" /><path d="M10 40h28v4H10z" /></svg>
+        <kbd>Espaço</kbd>
+      </div>
+      <div class="slot small" data-skill="interact">
+        <svg viewBox="0 0 48 48"><path d="M16 22V10a3 3 0 0 1 6 0v10V6a3 3 0 0 1 6 0v14V9a3 3 0 0 1 6 0v13-6a3 3 0 0 1 6 0v12c0 9-6 16-14 16-6 0-10-3-13-8l-7-11a3 3 0 0 1 5-3z" /></svg>
+        <kbd>F</kbd>
+      </div>
+    </div>
+    <div id="memoryBar"><div class="fill"></div><span>[<i id="memLabel">Memória da Mata</i>] <b id="memPct">0%</b></span></div>
+  </div>
+
+  <div id="screens">
+    <section id="title" class="screen show">
+      <div class="card">
+        <p class="kicker">Baobá</p>
+        <h1 id="titleName">O Eco da Mata</h1>
+        <p class="lead" id="titleLead">O Silêncio tomou a clareira. Liberte a memória da mata.</p>
+        <div class="hero-pick level-pick" role="radiogroup" aria-label="Fase">
+          <button class="hero level on" data-level="mata" role="radio" aria-checked="true">Mata Viva <small>Fase 1 · Curupira</small></button>
+          <button class="hero level" data-level="sertao" role="radio" aria-checked="false">Sertão Velho <small>Fase 2 · Mula sem Cabeça</small></button>
+        </div>
+        <div class="hero-pick" role="radiogroup" aria-label="Herói">
+          <button class="hero on" data-hero="capoeirista" role="radio" aria-checked="true">Capoeirista <small>DPS corpo a corpo</small></button>
+          <button class="hero" data-hero="cangaceiro" role="radio" aria-checked="false">Cangaceiro <small>DPS à distância</small></button>
+          <button class="hero" data-hero="vaqueiro" role="radio" aria-checked="false">Peão <small>Tanque</small></button>
+          <button class="hero" data-hero="maloka" role="radio" aria-checked="false">Maloka <small>DPS furtivo</small></button>
+        </div>
+        <p class="class-line" id="heroLine"><strong>Capoeirista</strong> · DPS corpo a corpo — mobilidade, esquivas rítmicas e chutes devastadores.</p>
+        <div class="controls">
+          <div><kbd>WASD</kbd> mover</div>
+          <div><kbd>Clique</kbd>/<kbd>J</kbd> <span id="ctlAttack">golpes</span></div>
+          <div><kbd>Q</kbd> <span id="ctlQ">Rasteira — interrompe</span></div>
+          <div><kbd>E</kbd> <span id="ctlE">Meia-lua — área</span></div>
+          <div><kbd>Shift</kbd> esquiva</div>
+          <div><kbd>Espaço</kbd> pulo</div>
+          <div><kbd>Tab</kbd> trocar alvo</div>
+          <div><kbd>F</kbd> interagir · <kbd>Esc</kbd> pausa</div>
+        </div>
+        <button id="btnStart" class="btn" disabled>Preparando personagem…</button>
+        <button id="btnLutador" class="btn ghost" disabled>Ver personagens · modelos e animações</button>
+        <p class="note">O progresso fica só nesta sessão. Fechar a página o perde.</p>
+      </div>
+    </section>
+
+    <section id="pause" class="screen">
+      <div class="card small">
+        <h2>Pausa</h2>
+        <button class="btn" data-act="resume">Continuar</button>
+        <button class="btn ghost" data-act="checkpoint">Voltar ao checkpoint</button>
+        <button class="btn ghost" data-act="restart">Recomeçar do início</button>
+        <label class="vol">Volume <input id="vol" type="range" min="0" max="1" step="0.05" value="0.7" /></label>
+        <p class="note">O progresso não é salvo ao fechar a página.</p>
+      </div>
+    </section>
+
+    <section id="defeat" class="screen">
+      <div class="card small">
+        <h2>Você caiu</h2>
+        <p id="defeatText" class="lead">A mata ainda espera por você.</p>
+        <button class="btn" data-act="retry">Tentar de novo <small>R</small></button>
+      </div>
+    </section>
+
+    <section id="complete" class="screen">
+      <div class="card">
+        <p id="completeKicker" class="kicker">Memória restaurada</p>
+        <h1 id="completeQuote" class="quote">“A mata lembra de quem cuida dela.”</h1>
+        <p id="completeLead" class="lead">O Curupira voltou a proteger a clareira. A cor voltou à Mata Viva.</p>
+        <p id="stats" class="note"></p>
+        <button class="btn" data-act="restart">Jogar de novo <small>R</small></button>
+      </div>
+    </section>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

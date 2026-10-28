@@ -1,0 +1,17 @@
+# Material pesado de produção e capturas (fica só local)
+Evidence/
+SourceArt/
+output/
+web.zip
+
+# Build e dependências
+node_modules/
+web/dist/
+.vercel/
+
+# Add-on de terceiros (repositório próprio no GitHub)
+tools/cbb-skinned-addon/
+tools/cbb-skinned-addon-20261026/
+
+__pycache__/
+*.pyc
