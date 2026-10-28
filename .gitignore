@@ -15,3 +15,6 @@ tools/cbb-skinned-addon-20261026/
 
 __pycache__/
 *.pyc
+
+# Saída do deploy da Vercel quando o Root Directory é a raiz
+/dist/
