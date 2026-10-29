@@ -38,6 +38,8 @@ Funciona no PC e no celular com a mesma build. Em aparelhos de toque (ou ao toca
 
 - **Tela deitada:** com o celular em pé, o jogo pausa e pede para girar. No Android, **Iniciar** também abre em tela cheia e trava a horizontal; no iPhone vale só o aviso.
 - **Mover:** arraste o polegar na metade esquerda da tela (joystick que nasce onde você toca).
+- **Missão:** a aba presa ao painel "Ajuda da Missão" recolhe o painel para fora da tela, pela lateral em que ele fica: direita no PC, esquerda no celular deitado. Sobra só a aba na borda, que pisca quando um objetivo muda. No celular começa recolhida; a escolha fica salva no navegador.
+- **HUD limpo no celular:** some o que repete informação (o nome do próprio herói, o papel na moldura, o texto da barra de memória, que vira um fio de 4 px) e o nome da área só aparece por alguns segundos ao entrar numa área nova. O joystick em repouso e a pausa ficam discretos. A barra do chefe vai para o topo e as dicas para uma faixa curta embaixo, entre o joystick e os botões. Com a barra do navegador à mostra (altura de até 360 px), botões, joystick, minimapa e retrato encolhem. No iPhone, a tela de título explica como instalar na Tela de Início para jogar em tela cheia.
 - **Ações:** os botões redondos à direita são a barra de habilidades: laranja golpeia, azul é o Q, roxo é o E, verde esquiva, cinza pula e a mira troca o alvo. Toque no inimigo para selecioná-lo, no aviso de interação para usar vestígio e memória, e em ❚❚ para pausar. Um toque na tela pula a cinemática.
 - **Desempenho:** em telas de toque a resolução vai até 1,5× e a sombra e o antisserrilhado ficam mais leves.
 - **Teste:** `node tools/shot-mobile.mjs` (celular deitado e em pé, mais o PC sem controles de toque).

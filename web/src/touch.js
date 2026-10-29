@@ -17,7 +17,7 @@ const TOUCH_TEXT = [
   [/WASD para mover/, 'Arraste à esquerda para mover'],
   [/Clique ou J/, 'botão laranja'],
   [/^Q (.+?) e E (.+?) causam/, 'Os botões azul ($1) e roxo ($2) causam'],
-  [/· Tab troca o alvo/, '· toque no inimigo ou no alvo para trocar'],
+  [/ · Tab troca o alvo/, ''],
   [/^Q \((.+?)\) interrompe/, 'O botão azul ($1) interrompe'],
   [/esquive com Shift/, 'esquive com o botão verde'],
   [/aperte F/, 'toque no aviso que aparece'],
@@ -92,4 +92,9 @@ export function setupTouch(input) {
   // Toque longo e gestos do navegador (menu, seleção, zoom) atrapalham o combate.
   document.addEventListener('contextmenu', (e) => { if (isTouch()) e.preventDefault(); });
   document.addEventListener('gesturestart', (e) => e.preventDefault());
+
+  // iPhone não deixa o site abrir em tela cheia: a dica do título ensina a instalar na Tela de Início.
+  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const installed = navigator.standalone || matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches;
+  document.getElementById('iosTip').hidden = !ios || installed;
 }

@@ -47,6 +47,16 @@ export class HUD {
     this.cast = $('#castBar');
     this.castFill = $('#castBar .fill');
     this.obj = $('#objList');
+    // Missão recolhível pela lateral: no celular começa recolhida (sobra tela); a escolha fica salva no navegador.
+    this.objPanel = $('#objectives');
+    this.objTab = $('#objTab');
+    let collapsed = matchMedia('(pointer: coarse)').matches;
+    try { collapsed = JSON.parse(localStorage.getItem('baoba.objCollapsed') ?? collapsed); } catch {}
+    this.collapseObjectives(collapsed);
+    this.objTab.addEventListener('click', () => {
+      this.collapseObjectives(!this.objPanel.classList.contains('collapsed'));
+      try { localStorage.setItem('baoba.objCollapsed', this.objPanel.classList.contains('collapsed')); } catch {}
+    });
     this.hintEl = $('#hint');
     this.toastEl = $('#toast');
     this.interactEl = $('#interact');
@@ -171,7 +181,7 @@ export class HUD {
     const cam = G.camera;
     const w = window.innerWidth;
     const h = window.innerHeight;
-    const ents = [{ key: G.player, name: G.player.kit.name, cls: 'player', ent: G.player }];
+    const ents = [{ key: G.player, name: G.player.kit.name, cls: 'player self', ent: G.player }];
     for (const e of G.enemies()) if (e.alive && (e.targetable || (!e.isBoss && e.state !== 'buried'))) ents.push({ key: e, name: e.name, cls: 'enemy', ent: e, hp: !e.isBoss });
     if (G.boss.freed) ents.push({ key: G.boss, name: 'Curupira', cls: 'player', ent: G.boss });
     const seen = new Set();
@@ -268,6 +278,9 @@ export class HUD {
     if (name === this.area) return;
     this.area = name;
     this.areaEl.textContent = name;
+    this.areaEl.classList.remove('new');
+    void this.areaEl.offsetWidth;
+    this.areaEl.classList.add('new');
   }
 
   setMemory(pct) {
@@ -287,9 +300,20 @@ export class HUD {
     this.logList.innerHTML = '';
   }
 
+  collapseObjectives(on) {
+    this.objPanel.classList.toggle('collapsed', on);
+    this.objTab.setAttribute('aria-expanded', String(!on));
+  }
+
   objectives(items) {
     const key = JSON.stringify(items) + isTouch();
     if (key === this.lastObj) return;
+    // Recolhida, a aba da missão pisca quando um objetivo muda.
+    if (this.lastObj && this.objPanel.classList.contains('collapsed')) {
+      this.objPanel.classList.remove('ping');
+      void this.objPanel.offsetWidth;
+      this.objPanel.classList.add('ping');
+    }
     this.lastObj = key;
     this.obj.innerHTML = '';
     for (const it of items) {

@@ -60,7 +60,16 @@ kbd {
 #minimap { display: block; width: 166px; height: 166px; background: #142014; border: 1px solid #000; }
 #areaName { margin-top: 3px; font: 700 12px/1.3 var(--ui); color: var(--cyan); text-align: center; text-shadow: 0 1px 2px #000; }
 #objectives { position: absolute; top: 208px; right: 10px; width: 236px; background: var(--panel); border: 1px solid var(--line); }
+#objectives { z-index: 2; transition: transform .3s ease; --tuck: calc(100% + 10px + env(safe-area-inset-right)); }
 #objectives h3 { margin: 0; padding: 4px 8px; font: 800 13px/1.3 var(--ui); color: #fff; background: linear-gradient(90deg, #c46a1a, #7a3a0a 70%, transparent); border-bottom: 1px solid var(--gold-2); }
+#objectives.collapsed { transform: translateX(var(--tuck)); }
+#objTab { position: absolute; top: -1px; right: 100%; width: 26px; height: 48px; padding: 0; display: grid; place-items: center; align-content: center; gap: 4px; pointer-events: auto; cursor: pointer;
+  background: var(--panel); border: 1px solid var(--gold-2); border-right: 0; border-radius: 6px 0 0 6px; }
+#objTab svg { width: 15px; height: 15px; fill: var(--gold); }
+#objTab .chev { width: 6px; height: 6px; border-right: 2px solid var(--gold); border-bottom: 2px solid var(--gold); transform: rotate(-45deg); transition: transform .3s; }
+#objectives.collapsed #objTab .chev { transform: rotate(135deg); }
+#objectives.ping #objTab { animation: objPing 1.4s; }
+@keyframes objPing { 0%, 40% { box-shadow: 0 0 0 2px #ffd27a, 0 0 14px #ffb24a; } 100% { box-shadow: none; } }
 #objectives .quest { padding: 5px 8px 0; font: 800 13px/1.3 var(--ui); color: var(--orange); }
 #objectives ul { margin: 0; padding: 4px 8px 8px; list-style: none; }
 #objectives li { font: 600 13px/1.4 var(--ui); color: var(--text); padding-left: 14px; position: relative; text-shadow: 0 1px 1px #000; }
@@ -277,7 +286,7 @@ body.touch #playerFrame { left: calc(8px + env(safe-area-inset-left)); }
 body.touch #log { display: none; }
 body.touch #bossBar { bottom: auto; top: 50px; width: min(520px, 52vw); display: flex; flex-direction: column-reverse; }
 body.touch #castBar { margin: 4px 12% 0; }
-body.touch #hint { bottom: auto; top: 25%; max-width: 60vw; white-space: normal; text-align: center; font-size: 14px; }
+body.touch #hint { bottom: 14px; max-width: 38vw; padding: 4px 10px; white-space: normal; text-align: center; font-size: 12px; line-height: 1.3; }
 body.touch #toast { bottom: auto; top: 33%; }
 body.touch #banner { top: 30%; }
 
@@ -302,7 +311,11 @@ body.touch #banner { top: 30%; }
   #objectives .quest { font-size: 11px; padding: 3px 6px 0; }
   #objectives ul { padding: 2px 6px 5px; }
   #objectives li { font-size: 11px; line-height: 1.3; }
-  body.touch #objectives { left: calc(8px + env(safe-area-inset-left)); right: auto; top: 104px; width: 200px; }   /* a direita é dos botões */
+  /* a direita é dos botões: no celular a missão fica à esquerda e recolhe para a esquerda */
+  body.touch #objectives { left: calc(8px + env(safe-area-inset-left)); right: auto; top: 104px; width: 200px; --tuck: calc(-100% - 8px - env(safe-area-inset-left)); }
+  body.touch #objTab { right: auto; left: 100%; width: 30px; height: 52px; border: 1px solid var(--gold-2); border-left: 0; border-radius: 0 6px 6px 0; }
+  body.touch #objTab .chev { transform: rotate(135deg); }
+  body.touch #objectives.collapsed #objTab .chev { transform: rotate(-45deg); }
   #log { display: none; }
   #memoryBar { height: 16px; }
   #memoryBar span { font-size: 10px; }
@@ -323,3 +336,40 @@ body.touch #banner { top: 30%; }
   .studio-heading { left: 20px; top: 10px; } .studio-heading h1 { font-size: 30px; margin-top: 4px; } .studio-heading p { display: none; }
   .studio-controls { top: 8px; bottom: 8px; right: 10px; width: 200px; padding: 10px; gap: 7px; overflow-y: auto; }
 }
+
+/* Celular com a barra do navegador à mostra (≈300 px de altura): tudo um pouco menor */
+@media (max-height: 360px) {
+  body.touch #skillbar { bottom: 20px; transform: scale(.8); transform-origin: right bottom; }
+  body.touch #stickBase, body.touch #stickKnob { left: calc(env(safe-area-inset-left) + 76px); top: calc(100% - 82px); }
+  body.touch #stickBase { width: 92px; height: 92px; }
+  body.touch #stickKnob { width: 42px; height: 42px; }
+  body.touch #btnPause { top: 4px; height: 30px; }
+  #playerFrame { top: 4px; width: min(220px, 32vw); }
+  #targetFrame { top: 46px; }
+  .badge { width: 38px; height: 38px; } .badge.small { width: 32px; height: 32px; }
+  .bar.dodge { height: 4px; }
+  #mapPanel { top: 4px; width: 84px; }
+  #minimap { width: 76px; height: 76px; }
+  body.touch #objectives { top: 86px; }
+  body.touch #bossBar { top: 52px; }
+  #memoryBar { height: 14px; }
+}
+
+/* Celular: HUD enxuto. Some o que repete informação (nome do próprio herói, papel, nome da área fixo, texto da
+   barra de memória) e os controles em repouso ficam discretos até serem usados. */
+body.touch .label.self { display: none; }
+body.touch #playerFrame .hearts { display: none; }
+body.touch #areaName { opacity: 0; transition: opacity .6s; }
+body.touch #areaName.new { animation: areaShow 3.5s; }
+@keyframes areaShow { 0%, 75% { opacity: 1; } 100% { opacity: 0; } }
+body.touch #mapPanel { background: rgba(18,14,12,.55); }
+body.touch #memoryBar { height: 4px; border-top: 0; background: rgba(0,0,0,.45); }
+body.touch #memoryBar span { display: none; }
+body.touch #stickBase { opacity: .22; border-color: rgba(232,196,106,.4); }
+body.touch #stickBase.on { opacity: .85; }
+body.touch #stickKnob { opacity: .55; }
+body.touch #stickBase.on + #stickKnob { opacity: .9; }
+body.touch #btnPause { width: 34px; height: 30px; background: rgba(18,14,12,.45); border-color: rgba(168,130,58,.6); }
+body.touch #btnPause svg { width: 15px; height: 15px; }
+body.touch .slot.small { opacity: .85; }
+body.touch #skillbar { bottom: 12px; }

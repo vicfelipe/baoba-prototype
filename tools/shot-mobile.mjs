@@ -31,6 +31,16 @@ const shot = async name => { const r = await send('Page.captureScreenshot', { fo
 const touch = (type, x, y) => send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x, y, id: 1 }] });
 const tap = async (x, y) => { await touch('touchStart', x, y); await touch('touchEnd'); };
 const center = sel => js(`(()=>{const r=document.querySelector('${sel}').getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2];})()`);
+// Peças do HUD que não podem se sobrepor no celular (pares com interseção > 2 px).
+const OVERLAP = `(()=>{const sel=['#playerFrame','#targetFrame','#mapPanel','#objectives:not(.collapsed)','#objTab','#btnPause','#bossBar','#hint.show','#stickBase',
+  ...[...document.querySelectorAll('#skillbar .slot')].map(s=>'.slot[data-skill="'+s.dataset.skill+'"]')];
+  const r=sel.map(q=>[q,document.querySelector(q)]).filter(([,e])=>e&&e.offsetParent!==null&&getComputedStyle(e).display!=='none'&&!e.closest('.hidden')).map(([q,e])=>[q,e.getBoundingClientRect()]);
+  const out=[]; for(let i=0;i<r.length;i++)for(let j=i+1;j<r.length;j++){const a=r[i][1],b=r[j][1];
+    const w=Math.min(a.right,b.right)-Math.max(a.left,b.left), h=Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top);
+    if(w>2&&h>2&&!(r[i][0].startsWith('.slot')&&r[j][0].startsWith('.slot')))out.push(r[i][0]+' x '+r[j][0]);}
+  const off=r.filter(([,a])=>a.left<-1||a.top<-1||a.right>innerWidth+1||a.bottom>innerHeight+1).map(([q])=>q);
+  return {out, off};})()`;
+const LONG_HINT = `__baoba.G.hud.hint('Q Veneno e E Fumaça causam muito dano · Tab troca o alvo', 30)`;
 const phone = (w, h) => send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: 1, mobile: true, screenOrientation: w > h ? { type: 'landscapePrimary', angle: 90 } : { type: 'portraitPrimary', angle: 0 } });
 async function load() {
   await send('Page.navigate', { url: page });
@@ -58,6 +68,24 @@ try {
   await shot('play');
   const obj = await js(`document.getElementById('objList').textContent`);
   expect('objectivesNoKeys', !/\(F\)/.test(obj), obj);
+
+  // Missão: no celular começa recolhida para fora da tela, pela esquerda, só com a aba na borda; a aba abre e recolhe.
+  const objState = () => js(`(()=>{const p=document.getElementById('objectives').getBoundingClientRect(), t=document.getElementById('objTab').getBoundingClientRect();
+    return [document.getElementById('objectives').classList.contains('collapsed'), Math.round(p.right), Math.round(t.left), Math.round(t.right)];})()`);
+  const o0 = await objState();
+  expect('missionStartsCollapsedLeft', o0[0] && o0[1] <= 1 && o0[2] >= -1 && o0[3] <= 40, o0);
+  await tap(...await center('#objTab')); await sleep(1500);
+  const o1 = await objState();
+  await js(LONG_HINT); await js(`__baoba.advance(1/60)`);
+  await shot('mission-open');
+  const ovOpen = await js(OVERLAP);
+  await tap(...await center('#objTab')); await sleep(1500);
+  const o2 = await objState();
+  expect('missionToggles', !o1[0] && o1[1] > 150 && o2[0], { open: o1, again: o2 });
+  const ovClosed = await js(OVERLAP);
+  await shot('mission-closed');
+  expect('hudNoOverlap844', !ovClosed.out.length && !ovClosed.off.length, ovClosed);
+  checks.overlapMissionOpen = ovOpen;
 
   // Joystick: arrastar 80 px para a direita na metade esquerda move o herói para +X.
   const x0 = await js(`__baoba.G.player.pos.x`);
@@ -109,9 +137,17 @@ try {
   await js(`__baoba.advance(3)`);
   await shot('boss');
 
+  // Celular com a barra do navegador à mostra: ~690×300, como no iPhone com o Chrome.
+  await phone(690, 300); await sleep(300);
+  await js(LONG_HINT); await js(`__baoba.advance(1/60)`);
+  const ovShort = await js(OVERLAP);
+  expect('hudNoOverlap690x300', !ovShort.out.length && !ovShort.off.length, ovShort);
+  await shot('short-boss');
+
   // ---------- PC (1280×720, mouse): nada de toque ----------
   await send('Emulation.setTouchEmulationEnabled', { enabled: false });
   await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
+  await js(`localStorage.removeItem('baoba.objCollapsed')`);
   await load();
   const pc = await js(`(()=>{const sb=document.getElementById('skillbar').getBoundingClientRect();
     return { touch: document.body.classList.contains('touch'), touchUi: getComputedStyle(document.getElementById('touchUi')).display,
@@ -128,6 +164,15 @@ try {
   const p1 = await js(`__baoba.G.player.pos.x`);
   expect('pcKeyboardMoves', p1 - p0 > 2, { p0, p1 });
   await shot('pc-play');
+  expect('pcMissionOpen', !(await js(`document.getElementById('objectives').classList.contains('collapsed')`)), 'open');
+  const [hx, hy] = await center('#objTab');
+  for (const type of ['mousePressed', 'mouseReleased']) await send('Input.dispatchMouseEvent', { type, x: hx, y: hy, button: 'left', clickCount: 1 });
+  for (let i = 0; i < 40 && await js(`document.getElementById("objectives").getAnimations().length > 0 || getComputedStyle(document.getElementById("objectives")).transform === "matrix(1, 0, 0, 1, 0, 0)"`); i++) await sleep(250);
+  // PC: recolhe para a direita; a aba fica na borda direita.
+  const pcObj = await js(`(()=>{const p=document.getElementById('objectives').getBoundingClientRect(), t=document.getElementById('objTab').getBoundingClientRect();
+    return [document.getElementById('objectives').classList.contains('collapsed'), Math.round(p.left), Math.round(t.left), Math.round(t.right), innerWidth];})()`);
+  expect('pcMissionCollapsesRight', pcObj[0] && pcObj[1] >= pcObj[4] - 1 && pcObj[2] >= pcObj[4] - 40 && pcObj[3] <= pcObj[4] + 1, pcObj);
+  await shot('pc-mission-closed');
 } finally {
   console.log('checks', JSON.stringify(checks));
   console.log('errors', JSON.stringify(errors));
