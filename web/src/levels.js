@@ -1,5 +1,5 @@
 // Fases escolhidas na tela de título: textos, chefe e áreas de cada uma. Os mundos ficam em world.js
-// (Mata Viva, doc 16) e sertao.js (Sertão Velho, doc 24); os dois seguem o mesmo roteiro do doc 01:
+// (Mata Viva, doc 16), sertao.js (Sertão Velho, doc 24) e porto.js (Porto de Santos, doc 25); seguem o roteiro do doc 01:
 // trilha com inimigos → vestígio → portão → arena (checkpoint) → chefe → memória final.
 
 export const LEVELS = {
@@ -61,5 +61,36 @@ export const LEVELS = {
     defeat: { arena: 'Você volta ao portão do casarão. A estrada continua livre.', trail: 'Os mortos voltam às covas e o folheto se apaga.' },
     area: (x, z) => (x < -48 ? 'Sertão Velho — Arraial' : Math.hypot(x + 26, z + 36.5) < 6.5 ? 'Cemitério do Arraial' : x < 17.5 ? 'Estrada das Covas' : 'Terreiro do Casarão'),
     bossArea: 'Chefe · Terreiro do Casarão',
+  },
+  // Textos do vestígio, dos trechos e da frase final: proposta (doc 25)
+  porto: {
+    key: 'porto',
+    boss: 'duo',
+    name: 'Porto de Santos',
+    title: 'A Ressaca do Porto',
+    lead: 'A ressaca não passa. No fim do trapiche, a Iara canta e o Ipupiara rodeia o deque.',
+    memLabel: 'Memória do Mar',
+    ambientAudio: 'sea',
+    enter: '[Sistema] Você chegou ao cais do Porto de Santos.',
+    lore: 'Os afogados sobem pela beira do cais e o coral anda na areia. Leia a carta que o mar trouxe e siga até o trapiche.',
+    enemyGoal: 'Derrote as criaturas do cais e da praia',
+    enemyKilled: 'Uma criatura do Silêncio voltou ao mar.',
+    vestigio: {
+      prompt: 'Ler a carta da garrafa',
+      banner: ['Uma carta que o mar trouxe', 'A praia lembra de quem partiu'],
+      log: '[Eco] Uma carta antiga foi lida em voz alta.',
+      hint: 'Uma garrafa brilha na areia — aproxime-se e aperte F',
+      goal: 'Leia a carta da garrafa na praia (F)',
+    },
+    gate: { banner: ['A corrente caiu na água', 'Siga pelo trapiche até o deque'], log: '[Sistema] A corrente do trapiche se soltou.', goal: 'Solte a corrente do trapiche' },
+    enterArena: 'Entre no deque do trapiche',
+    bossGoal: 'Liberte a Iara e vença o Ipupiara',
+    bossDone: 'Liberte a Iara e vença o Ipupiara',
+    memory: { prompt: 'Tocar a memória do mar', goal: 'Toque a memória do mar (F)', quote: '“O mar devolve o que a gente lembra.”' },
+    complete: { kicker: 'O mar se acalmou', lead: 'A Iara voltou a cantar para as águas, o Ipupiara afundou e o sol se abriu sobre o porto.' },
+    checkpoint: { arena: 'Deque do Trapiche', trail: 'Porto de Santos' },
+    defeat: { arena: 'Você volta à entrada do trapiche. O cais e a praia continuam livres.', trail: 'As criaturas voltam ao mar e a carta se apaga.' },
+    area: (x, z) => (x > 28 ? 'Porto de Santos — Cais' : x > 8 ? 'Canal e Jardim da Orla' : x > -19.5 ? 'Praia' : Math.hypot(x + 44, z + 30) < 12.5 ? 'Deque do Trapiche' : 'Trapiche'),
+    bossArea: 'Chefe · Deque do Trapiche',
   },
 };

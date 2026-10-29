@@ -68,9 +68,10 @@
     <div id="bossBar" class="hidden">
       <div id="castBar" class="hidden">
         <div class="fill"></div>
-        <span class="label"><svg viewBox="0 0 24 24" class="shield"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z"/></svg> Chamado do Silêncio — <b>Interromper<span class="key-only"> (Q)</span></b></span>
+        <span class="label"><svg viewBox="0 0 24 24" class="shield"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z"/></svg> <span id="castName">Chamado do Silêncio</span> — <b>Interromper<span class="key-only"> (Q)</span></b></span>
       </div>
       <div class="bar boss"><div class="ghost"></div><div class="fill"></div><span class="val"><b id="bossName">Curupira corrompido</b> <span id="bossVal"></span></span></div>
+      <div class="bar boss second hidden"><div class="ghost"></div><div class="fill"></div><span class="val"><b class="bname"></b> <span class="bval"></span></span></div>
     </div>
 
     <!-- Barra de habilidades -->
@@ -120,6 +121,7 @@
         <div class="hero-pick level-pick" role="radiogroup" aria-label="Fase">
           <button class="hero level on" data-level="mata" role="radio" aria-checked="true">Mata Viva <small>Fase 1 · Curupira</small></button>
           <button class="hero level" data-level="sertao" role="radio" aria-checked="false">Sertão Velho <small>Fase 2 · Mula sem Cabeça</small></button>
+          <button class="hero level" data-level="porto" role="radio" aria-checked="false">Porto de Santos <small>Fase 3 · Iara e Ipupiara</small></button>
         </div>
         <div class="hero-pick" role="radiogroup" aria-label="Herói">
           <button class="hero on" data-hero="capoeirista" role="radio" aria-checked="true">Capoeirista <small>DPS corpo a corpo</small></button>

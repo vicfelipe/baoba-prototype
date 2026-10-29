@@ -2,11 +2,13 @@ import * as THREE from 'three';
 import './style.css';
 import { buildWorld, FRAG_SPAWNS } from './world.js';
 import { buildSertao, SERTAO_ENEMIES, SERTAO_SPAWN } from './sertao.js';
+import { buildPorto, PORTO_ENEMIES, PORTO_SPAWN } from './porto.js';
 import { LEVELS } from './levels.js';
 import { Player } from './player.js';
 import { Fragmento } from './enemies.js';
 import { Curupira } from './boss.js';
 import { Mula } from './mula.js';
+import { Duo } from './duo.js';
 import { loadMulaAsset } from './mula-asset.js';
 import { Telegraphs, setRuneTexture } from './telegraph.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
@@ -127,7 +129,7 @@ const hud = new HUD();
 const fx = new FX(scene, camera, document.getElementById('fxLayer'));
 const tg = new Telegraphs(scene);
 // Fases (tela de título): cada mundo num grupo próprio; só o da fase escolhida fica visível e atualiza
-const worlds = { mata: buildWorld(scene), sertao: buildSertao(scene) };
+const worlds = { mata: buildWorld(scene), sertao: buildSertao(scene), porto: buildPorto(scene) };
 let world = worlds.mata;
 setRuneTexture(world.runeTex);
 
@@ -139,11 +141,13 @@ G.projectiles = new Projectiles(G);
 const ENEMIES = {
   mata: FRAG_SPAWNS.map(([x, z], i) => new Fragmento(G, x, z, i, 'silencio', worlds.mata.root)),
   sertao: SERTAO_ENEMIES.map((e, i) => new Fragmento(G, e.x, e.z, i, e.kind, worlds.sertao.root, [SERTAO_SPAWN.trail.x, SERTAO_SPAWN.trail.z])),
+  porto: PORTO_ENEMIES.map((e, i) => new Fragmento(G, e.x, e.z, i, e.kind, worlds.porto.root, [PORTO_SPAWN.trail.x, PORTO_SPAWN.trail.z])),
 };
 G.fragments = ENEMIES.mata;
-// Chefes: o Curupira (Mata Viva) e a Mula sem Cabeça (Sertão Velho), na mesma arena. Só o ativo
-// aparece, atualiza e entra em G.enemies.
-G.bosses = { curupira: new Curupira(G), mula: new Mula(G) };
+// Chefes: o Curupira (Mata Viva), a Mula sem Cabeça (Sertão Velho) e a dupla Iara e Ipupiara (Porto de
+// Santos), cada um na arena da sua fase. Só o ativo aparece, atualiza e entra em G.enemies; a dupla entra
+// pelas suas partes (dois alvos, duas barras).
+G.bosses = { curupira: new Curupira(G), mula: new Mula(G), duo: new Duo(G) };
 G.boss = G.bosses.curupira;
 function selectBoss(key) {
   G.boss = G.bosses[key];
@@ -151,7 +155,7 @@ function selectBoss(key) {
   if (key !== 'curupira') G.bosses.curupira.spikes.visible = false;
   document.getElementById('bossName').textContent = G.boss.name;
 }
-G.enemies = () => [...G.fragments, G.boss];
+G.enemies = () => [...G.fragments, ...(G.boss.parts || [G.boss])];
 
 let level = LEVELS.mata;
 function selectLevel(key) {
@@ -285,9 +289,10 @@ function startLevel(key) {
   } else startPlay();
 }
 
-// Atalho dos testes: Sertão Velho já no checkpoint do terreiro (estrada limpa, portão aberto)
-function startMula() {
-  selectLevel('sertao');
+// Atalho dos testes: a fase já no checkpoint da arena (caminho limpo, portão aberto). startMula: Sertão
+// Velho no terreiro; startDuo: Porto de Santos na entrada do trapiche.
+function startMula(key = 'sertao') {
+  selectLevel(key);
   restartAll();
   for (const f of G.fragments) {
     f.alive = false;
@@ -347,9 +352,9 @@ G.onBossFreed = () => {
   }));
 };
 
-// Mula vencida: a chama se apaga, o terreiro reabre, a cor volta e amanhece; a memória do sertão
-// aparece longe do corpo da Mula (step conta o tempo).
-G.onBossDefeated = () => {
+// Fim da luta sem libertação (Mula vencida, dupla resolvida): a arena reabre, a cor volta e o céu muda
+// (amanhecer no Sertão, sol depois da ressaca no Porto); a memória aparece longe do corpo do chefe.
+function finishFight(title, sub, text) {
   prog.defeated = true;
   prog.freed = true;
   prog.fight = false;
@@ -365,8 +370,26 @@ G.onBossDefeated = () => {
   if (Math.hypot(fm.position.x - G.boss.pos.x, fm.position.z - G.boss.pos.z) < 4) fm.position.set(a.x, 0, a.z + 3);
   audio.setMusic('victory');
   audio.play('restore');
-  hud.banner('A Mula sem Cabeça foi vencida!', 'A chama se apaga e o sertão amanhece', 4);
-  log('A Mula sem Cabeça foi vencida. O fogo se apaga e amanhece.', 'good');
+  hud.banner(title, sub, 4);
+  log(text, 'good');
+}
+G.onBossDefeated = () => finishFight('A Mula sem Cabeça foi vencida!', 'A chama se apaga e o sertão amanhece', 'A Mula sem Cabeça foi vencida. O fogo se apaga e amanhece.');
+
+// Dupla do Porto: cada parte resolvida tem o seu aviso; com as duas, o mar acalma e o sol abre.
+const DUO_TEXT = {
+  iara: { title: 'A Iara foi libertada!', rest: 'Falta vencer o Ipupiara', log: 'A máscara do Silêncio se parte: a Iara está livre.' },
+  ipu: { title: 'O Ipupiara afundou!', rest: 'Falta libertar a Iara', log: 'O Ipupiara foi vencido e afunda no mar.' },
+};
+G.onDuoPart = (part) => {
+  const t = DUO_TEXT[part === G.bosses.duo.iara ? 'iara' : 'ipu'];
+  log(t.log, 'good');
+  if (G.player.target === part) G.player.target = null;
+  if (!G.bosses.duo.partDone(part)) {
+    hud.banner(t.title, t.rest, 3);
+    audio.play('chime');
+    return;
+  }
+  finishFight(t.title, 'O mar se acalma e o sol abre sobre o porto', 'A ressaca passou. O mar se acalma e o sol volta ao porto.');
 };
 
 // Encontro: o portão de raízes fecha, o Curupira desperta e ruge; a luta começa no fim.
@@ -379,9 +402,10 @@ function startEncounter() {
   cine.play(encounterCinematic(G, cine, () => {
     G.boss.begin();
     mode = 'play';
-    setTimeout(() => once('boss', G.boss === G.bosses.mula
-      ? 'Cone atrás: coice · Faixa laranja: investida · Rosa: empinada — saia antes de encher'
-      : 'Vermelho largo: varredura de cipó · Rosa: raízes — saia antes de encher', 6), 1500);
+    const tip = G.boss === G.bosses.mula ? 'Cone atrás: coice · Faixa laranja: investida · Rosa: empinada — saia antes de encher'
+      : G.boss === G.bosses.duo ? 'Azul: ressaca e maré alta · Vermelho: rabada · Laranja: arremetida — não caia no mar!'
+        : 'Vermelho largo: varredura de cipó · Rosa: raízes — saia antes de encher';
+    setTimeout(() => once('boss' + level.key, tip, 6), 1500);
   }));
 }
 
@@ -778,6 +802,7 @@ window.__baoba = {
   hold: false,   // testes: congela o relógio real; advance() continua avançando
   get mode() { return mode; },
   startMula,
+  startDuo: () => startMula('porto'),
   startLevel,
   selectLevel,
   worlds,

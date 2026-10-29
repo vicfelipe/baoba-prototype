@@ -17,27 +17,31 @@ const frag = `
   uniform float uFlash;
   uniform float uTime;
   uniform float uRadius;
+  uniform float uInner;
   uniform sampler2D tRune;
   varying vec2 vUv;
   void main() {
     vec2 p = (vUv - 0.5) * 2.0;
     float r = length(p);
     float a = abs(atan(p.x, p.y));
-    if (r > 1.0 || a > uHalf) discard;
+    if (r > 1.0 || a > uHalf || r < uInner) discard;
     float px = 1.0 / (uRadius * 30.0);
-    float edgeR = smoothstep(1.0 - px * 5.0, 1.0 - px * 1.5, r);
+    float edgeR = max(smoothstep(1.0 - px * 5.0, 1.0 - px * 1.5, r), uInner > 0.0 ? smoothstep(uInner + px * 5.0, uInner + px * 1.5, r) : 0.0);
     float edgeA = uHalf < 3.1 ? smoothstep(uHalf - px * 5.0 / max(r, 0.05), uHalf - px * 1.0 / max(r, 0.05), a) : 0.0;
     float edge = max(edgeR, edgeA);
-    float rim = max(smoothstep(px * 8.0, 0.0, abs(r - (1.0 - px * 7.0))), uHalf < 3.1 ? smoothstep(px * 8.0, 0.0, abs(a - uHalf + px * 7.0 / max(r, 0.05)) * max(r, 0.05)) : 0.0);
+    float rim = max(smoothstep(px * 8.0, 0.0, abs(r - (1.0 - px * 7.0))), uInner > 0.0 ? smoothstep(px * 8.0, 0.0, abs(r - uInner - px * 7.0)) : 0.0);
+    rim = max(rim, uHalf < 3.1 ? smoothstep(px * 8.0, 0.0, abs(a - uHalf + px * 7.0 / max(r, 0.05)) * max(r, 0.05)) : 0.0);
     float ang = uTime * 0.6;
     mat2 rot = mat2(cos(ang), -sin(ang), sin(ang), cos(ang));
     float rune = texture2D(tRune, rot * p * 0.5 + 0.5).a;
-    float fill = step(r, uProgress);
+    // anel (uInner > 0): enche de fora para dentro, como a água subindo pela borda
+    float k = uInner > 0.0 ? (1.0 - r) / (1.0 - uInner) : r;
+    float fill = step(k, uProgress);
     vec3 col = uColor * (0.35 + fill * 0.35);
     float alpha = 0.28 + fill * 0.3;
     col += uColor * rune * (0.8 + fill * 1.2);
     alpha = max(alpha, rune * 0.85);
-    float front = smoothstep(0.05, 0.0, abs(r - uProgress)) * step(0.02, uProgress);
+    float front = smoothstep(0.05, 0.0, abs(k - uProgress)) * step(0.02, uProgress);
     col += vec3(1.0, 0.9, 0.85) * front * 1.4;
     alpha = max(alpha, front);
     col = mix(col, uColor * 1.8 + 0.3, rim);
@@ -125,7 +129,8 @@ export class Telegraphs {
 
   // dir: Vector3 (direção do cone), angleDeg: abertura total.
   // Com length: faixa que parte de (x, z) na direção dir, com meia largura radius.
-  add({ x, z, radius, angleDeg = 360, dir = null, length = 0, color = '#ff3a3a' }) {
+  // Com inner: anel entre inner e radius (maré alta do Porto, doc 25).
+  add({ x, z, radius, angleDeg = 360, dir = null, length = 0, inner = 0, color = '#ff3a3a' }) {
     const mat = new THREE.ShaderMaterial({
       uniforms: {
         uColor: { value: new THREE.Color(color) },
@@ -135,6 +140,7 @@ export class Telegraphs {
         uFlash: { value: 0 },
         uTime: { value: 0 },
         uRadius: { value: radius },
+        uInner: { value: inner / radius },
         uLen: { value: length },
         tRune: { value: runeTex },
       },
@@ -242,7 +248,7 @@ export class Telegraphs {
 }
 
 // Ponto dentro do cone/círculo considerando o raio do alvo (disco intersecta a forma)
-export function hitsShape({ x, z, radius, angleDeg = 360, dir = null, length = 0 }, px, pz, pr) {
+export function hitsShape({ x, z, radius, angleDeg = 360, dir = null, length = 0, inner = 0 }, px, pz, pr) {
   const dx = px - x;
   const dz = pz - z;
   if (length) {   // faixa: ao longo de dir entre 0 e length, meia largura radius
@@ -250,7 +256,7 @@ export function hitsShape({ x, z, radius, angleDeg = 360, dir = null, length = 0
     return along >= -pr && along <= length + pr && side <= radius + pr;
   }
   const d = Math.hypot(dx, dz);
-  if (d > radius + pr) return false;
+  if (d > radius + pr || (inner && d < inner - pr)) return false;
   if (angleDeg >= 360 || d < pr) return true;
   const half = (angleDeg / 2) * (Math.PI / 180);
   const ang = Math.acos(Math.max(-1, Math.min(1, (dx * dir.x + dz * dir.z) / d)));

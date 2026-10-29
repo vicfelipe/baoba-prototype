@@ -121,7 +121,7 @@ export class Mula {
     }
     if (s === 'blaze') {
       this.setState('cast');
-      this.cast = { t: 0, dur: MULA.blaze.cast };
+      this.cast = { t: 0, dur: MULA.blaze.cast, name: 'Labareda' };
       G.audio.play('cast', MULA.blaze.cast);
       G.hud.log('A Mula sem Cabeça conjura a Labareda!', 'bad');
       if (!this.shownBlazeHint) {

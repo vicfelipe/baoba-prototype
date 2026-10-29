@@ -168,6 +168,27 @@ export class FX {
       case 'poisonTick':
         P(this.add, 2, () => base('#7dff5a', rnd(0.5, 0.8), rnd(0.15, 0.25), [rnd(-0.3, 0.3), rnd(0.6, 1.2), rnd(-0.3, 0.3)], { g: 0, drag: 1, ox: rnd(-0.3, 0.3), oz: rnd(-0.3, 0.3) }));
         break;
+      // Porto de Santos: espirro d'água, espuma da ressaca, lascas de coral, garoa e respingos no ar
+      case 'splash':
+        P(this.norm, opts.n || 20, () => base(Math.random() < 0.5 ? '#e8f6ff' : '#9fd4e8', rnd(0.4, 0.8), rnd(0.18, 0.34), [rnd(-3, 3), rnd(3, 7), rnd(-3, 3)], { g: -16, drag: 1 }));
+        P(this.add, Math.ceil((opts.n || 20) / 3), () => base('#bfeaff', rnd(0.3, 0.6), rnd(0.3, 0.5), [rnd(-1.5, 1.5), rnd(1, 3), rnd(-1.5, 1.5)], { g: -4, drag: 2 }));
+        break;
+      case 'foam':
+        P(this.norm, opts.n || 6, () => base(Math.random() < 0.6 ? '#f4fbff' : '#cfe6ee', rnd(0.35, 0.7), rnd(0.3, 0.55), [rnd(-1, 1), rnd(1.5, 4), rnd(-1, 1)], { g: -10, drag: 1.5, ox: rnd(-1, 1), oz: rnd(-1, 1) }));
+        break;
+      case 'coral':
+        P(this.norm, 20, () => base(Math.random() < 0.5 ? '#e88a7a' : '#d8c0a8', rnd(0.5, 0.9), rnd(0.16, 0.3), [rnd(-5, 5), rnd(2, 7), rnd(-5, 5)], { g: -14, drag: 1 }));
+        P(this.add, 10, () => base('#9ff0ff', rnd(0.5, 0.9), rnd(0.25, 0.4), [rnd(-1.5, 1.5), rnd(1, 3), rnd(-1.5, 1.5)], { g: 2, drag: 2 }));
+        break;
+      case 'drizzle':
+        P(this.norm, 2, () => base('#b8c8d6', rnd(0.5, 0.8), rnd(0.05, 0.08), [-1.5, rnd(-11, -9), 0.6], { g: 0, drag: 0, ox: rnd(-14, 14), oz: rnd(-12, 8), oy: rnd(5, 8) }));
+        break;
+      case 'spray':
+        P(this.norm, 1, () => base('#e6f2f8', rnd(1, 1.8), rnd(0.12, 0.2), [rnd(-1.6, -0.6), rnd(0.2, 0.6), rnd(-0.2, 0.4)], { g: 0, drag: 0.2, ox: rnd(-12, 12), oz: rnd(-10, 8), oy: rnd(0.3, 1.8) }));
+        break;
+      case 'sunmote':
+        P(this.add, 1, () => base(Math.random() < 0.6 ? '#ffd890' : '#fff4d0', rnd(2.5, 4), rnd(0.06, 0.12), [rnd(-0.3, 0.3), rnd(0.15, 0.4), rnd(-0.3, 0.3)], { g: 0, drag: 0.2, ox: rnd(-12, 12), oz: rnd(-10, 8), oy: rnd(0.3, 2) }));
+        break;
       case 'roots':
         P(this.norm, 20, () => base(Math.random() < 0.5 ? '#6e5a7e' : '#8a7a5a', rnd(0.4, 0.8), rnd(0.25, 0.45), [rnd(-3, 3), rnd(3, 7), rnd(-3, 3)], { g: -16, drag: 1 }));
         break;

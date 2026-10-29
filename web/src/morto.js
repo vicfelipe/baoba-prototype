@@ -5,10 +5,13 @@ import { makeFlashable } from './rig.js';
 // Morto-vivo do Silêncio (fase 2, Sertão Velho): variação do Fragmento. O mesmo Silêncio que junta lascas
 // na Mata levanta os mortos do cemitério do arraial: ossada corcunda com trapos de couro, coração de lasca
 // brilhando entre as costelas, olhos de fogo-fátuo e lascas prateadas orbitando. 'brasa' tem o coração em
-// brasa e explode ao cair. Animação procedural por transformação, sem esqueleto de pele (como o Fragmento).
+// brasa e explode ao cair. 'afogado' (fase 3, Porto de Santos, doc 25): estivador afogado, ossada esverdeada com
+// cracas, camisa e macacão molhados, boné, algas penduradas e um gancho de carga na mão direita; sobe do mar.
+// Animação procedural por transformação, sem esqueleto de pele (como o Fragmento).
 
 export function buildMorto(kind = 'morto', index = 0) {
   const brasa = kind === 'brasa';
+  const afog = kind === 'afogado';
   const root = new THREE.Group();
   const rise = new THREE.Group();          // sobe da cova; cai ao morrer
   root.add(rise);
@@ -16,12 +19,13 @@ export function buildMorto(kind = 'morto', index = 0) {
   hips.position.y = 0.92;
   rise.add(hips);
 
-  const bone = toon('#dcd2bb');
-  const boneDark = toon('#a89c84');
-  const rag = toon(index % 2 ? '#4c3a2c' : '#3e3a34');
-  const rag2 = toon('#6a5440');
-  const eyeCol = brasa ? '#ffd27a' : '#c4ffe6';
-  const eyeEm = brasa ? '#ff7a1a' : '#3dffb0';
+  const bone = toon(afog ? '#bcc6b2' : '#dcd2bb');
+  const boneDark = toon(afog ? '#7f8e80' : '#a89c84');
+  const rag = toon(afog ? (index % 2 ? '#3c5a78' : '#4a6656') : index % 2 ? '#4c3a2c' : '#3e3a34');
+  const rag2 = toon(afog ? '#2e4458' : '#6a5440');
+  const eyeCol = brasa ? '#ffd27a' : afog ? '#c8f4ff' : '#c4ffe6';
+  const eyeEm = brasa ? '#ff7a1a' : afog ? '#36c8ff' : '#3dffb0';
+  const weed = toon('#4f7a3a');
 
   hips.add(part(GEO.sphere, boneDark, { scale: [0.16, 0.09, 0.11], line: 0.012 }));
   hips.add(part(GEO.cyl, rag, { pos: [0, -0.06, 0], scale: [0.19, 0.16, 0.14], line: 0.012 }));
@@ -56,14 +60,14 @@ export function buildMorto(kind = 'morto', index = 0) {
     }
   }
   chest.add(part(GEO.box, bone, { pos: [0, -0.06, 0.1], scale: [0.03, 0.2, 0.02], line: 0.008 }));
-  const heartMat = toon(brasa ? '#ffd27a' : '#d8b8ff', { emissive: brasa ? '#ff5a10' : '#7a3cff', emissiveIntensity: 1.8 });
+  const heartMat = toon(brasa ? '#ffd27a' : afog ? '#bfe8ff' : '#d8b8ff', { emissive: brasa ? '#ff5a10' : afog ? '#2a9cff' : '#7a3cff', emissiveIntensity: 1.8 });
   const heart = part(GEO.ico, heartMat, { pos: [0, -0.07, 0.01], scale: 0.07, line: 0 });
   chest.add(heart);
   // Gibão rasgado só nas costas e nos lados: as costelas ficam à vista na frente
-  const cape = part(new THREE.ConeGeometry(0.3, 0.46, 10, 1, true, Math.PI * 0.42, Math.PI * 1.16), toon('#5a4636', { side: THREE.DoubleSide }), { pos: [0, -0.02, -0.02], line: 0.01 });
+  const cape = part(new THREE.ConeGeometry(0.3, 0.46, 10, 1, true, Math.PI * 0.42, Math.PI * 1.16), toon(afog ? '#3a5468' : '#5a4636', { side: THREE.DoubleSide }), { pos: [0, -0.02, -0.02], line: 0.01 });
   chest.add(cape);
   for (let i = 0; i < 4; i++) {
-    chest.add(part(GEO.box, toon('#4a3828'), { pos: [-0.2 + i * 0.13, -0.3 - (i % 2) * 0.05, -0.12], rot: [0.15, 0, (i - 1.5) * 0.12], scale: [0.09, 0.16, 0.02], line: 0.008 }));
+    chest.add(part(GEO.box, toon(afog ? '#2c4252' : '#4a3828'), { pos: [-0.2 + i * 0.13, -0.3 - (i % 2) * 0.05, -0.12], rot: [0.15, 0, (i - 1.5) * 0.12], scale: [0.09, 0.16, 0.02], line: 0.008 }));
   }
 
   // Braços compridos com garras de lasca
@@ -82,6 +86,11 @@ export function buildMorto(kind = 'morto', index = 0) {
     fore.add(part(limbGeo(0.032, 0.35, 0.026), bone, { line: 0.01 }));
     for (let k = 0; k < 3; k++) {
       fore.add(part(GEO.oct, clawMat, { pos: [(k - 1) * 0.03, -0.42, 0.02], rot: [0.3, 0, (k - 1) * 0.25], scale: [0.018, 0.09, 0.018], line: 0.006 }));
+    }
+    // afogado: gancho de carga na mão direita
+    if (afog && s > 0) {
+      fore.add(part(GEO.cyl, toon('#5a4634'), { pos: [0, -0.4, 0.03], rot: [1.2, 0, 0], scale: [0.025, 0.14, 0.025], line: 0.006 }));
+      fore.add(part(new THREE.TorusGeometry(0.07, 0.014, 6, 12, Math.PI * 1.3), toon('#6a6e76'), { pos: [0, -0.48, 0.1], rot: [0, Math.PI / 2, 0.6], line: 0.006 }));
     }
     arms.push({ arm, fore, s });
   }
@@ -107,8 +116,23 @@ export function buildMorto(kind = 'morto', index = 0) {
     head.add(part(GEO.sphereLo, eyeMat, { pos: [s * 0.047, 0.08, 0.116], scale: [0.017, 0.02, 0.012], line: 0 }));
   }
   head.add(part(GEO.oct, socket, { pos: [0, 0.03, 0.126], scale: [0.015, 0.022, 0.01], line: 0 }));
+  if (afog) {
+    // boné de estivador e algas penduradas na cabeça e nos ombros; cracas no crânio
+    if (index % 2 === 0) {
+      head.add(part(GEO.sphere, toon('#2e3e52'), { pos: [0, 0.16, -0.01], scale: [0.13, 0.07, 0.135], line: 0.01 }));
+      head.add(part(GEO.box, toon('#26344a'), { pos: [0, 0.14, 0.13], rot: [0.25, 0, 0], scale: [0.16, 0.015, 0.1], line: 0.008 }));
+    }
+    for (let i = 0; i < 5; i++) {
+      const a = -1.2 + i * 0.6;
+      head.add(part(GEO.box, weed, { pos: [Math.sin(a) * 0.11, 0.0, Math.cos(a) * 0.08 - 0.03], rot: [0.1, a, 0.05], scale: [0.03, 0.24 + (i % 2) * 0.08, 0.008], line: 0 }));
+    }
+    for (const sx of [-1, 1]) chest.add(part(GEO.box, weed, { pos: [sx * 0.2, -0.05, 0.02], rot: [0, 0, sx * 0.15], scale: [0.03, 0.3, 0.008], line: 0 }));
+    for (let i = 0; i < 4; i++) head.add(part(GEO.cone, toon('#d8d4c4'), { pos: [-0.06 + i * 0.04, 0.17, -0.06 + (i % 2) * 0.05], scale: [0.018, 0.02, 0.018], line: 0 }));
+    // corda enrolada no ombro
+    chest.add(part(new THREE.TorusGeometry(0.2, 0.018, 6, 20), toon('#b09a6a'), { pos: [0, 0.02, 0], rot: [1.25, 0.5, 0.6], line: 0.006 }));
+  }
   // Chapéu de couro gasto, de aba quebrada (metade deles)
-  if (index % 2 === 0) {
+  if (index % 2 === 0 && !afog) {
     const hat = new THREE.Group();
     hat.position.set(0, 0.2, -0.01);
     hat.rotation.set(-0.12, 0, index % 4 ? 0.22 : -0.22);
@@ -127,7 +151,7 @@ export function buildMorto(kind = 'morto', index = 0) {
   }
 
   root.traverse((o) => { if (o.isMesh && !o.userData.isOutline) { o.castShadow = true; o.receiveShadow = false; } });
-  const m = { root, rise, hips, spine, chest, neck, head, jaw, legs, arms, shards, heart, heartMat, brasa, flash: makeFlashable(root) };
+  const m = { root, rise, hips, spine, chest, neck, head, jaw, legs, arms, shards, heart, heartMat, brasa, afog, flash: makeFlashable(root) };
   m.cur = { walk: 0, reach: 0.9, lean: 0.35, open: 0.2 };
   return m;
 }

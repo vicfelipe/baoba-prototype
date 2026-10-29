@@ -189,6 +189,35 @@ export class Audio {
         for (let i = 0; i < 7; i++) this.noise(t + i * 0.05 + Math.random() * 0.03, 0.05, 0.3, 'bandpass', 900 + Math.random() * 1500, null, 3);
         this.osc('sine', 120, t, 0.25, 0.3, 50);
         break;
+      // Porto de Santos (doc 25)
+      case 'splash': // corpo caindo na água
+        this.noise(t, 0.6, 0.5, 'lowpass', 2400, 300, 0.8);
+        this.noise(t + 0.05, 0.35, 0.25, 'bandpass', 3200, 1200, 1.5);
+        this.osc('sine', 140, t, 0.3, 0.2, 60);
+        break;
+      case 'wave': // a ressaca quebrando no deque
+        this.noise(t, 1.6, 0.6, 'lowpass', 400, 2600, 0.6);
+        this.noise(t + 0.4, 1.4, 0.4, 'highpass', 1800, 600, 0.7);
+        this.osc('sine', 55, t, 1.2, 0.25, 40);
+        break;
+      case 'tide': // a maré subindo pela borda
+        this.noise(t, 2.2, 0.35, 'lowpass', 300, 1200, 0.8);
+        break;
+      case 'song': { // Canto da Iara: voz em glissando, duas notas, com eco
+        const d = arg || 3.6;
+        [440, 523, 494, 587].forEach((f, i) => {
+          this.osc('sine', f, t + (i * d) / 4, d / 4 + 0.3, 0.07, f * 1.02);
+          this.osc('triangle', f / 2, t + (i * d) / 4 + 0.1, d / 4, 0.03);
+        });
+        break;
+      }
+      case 'jet': // jato d'água
+        this.noise(t, 0.5, 0.45, 'bandpass', 900, 3000, 1.2);
+        break;
+      case 'bite': // mordida do Ipupiara
+        this.noise(t, 0.08, 0.5, 'bandpass', 1400, null, 2);
+        this.osc('square', 180, t, 0.12, 0.12, 90);
+        break;
       case 'gate':
         this.noise(t, 1.4, 0.35, 'lowpass', 1800, 200, 0.7);
         this.osc('sine', 80, t, 1.2, 0.3, 50);
@@ -221,6 +250,7 @@ export class Audio {
   updateAmbient(dt, life) {
     if (!this.ctx) return;
     if (this.ambientKind === 'night') return this.nightAmbient(dt, life);
+    if (this.ambientKind === 'sea') return this.seaAmbient(dt, life);
     this.birdTimer -= dt;
     if (this.birdTimer <= 0) {
       this.birdTimer = 1.5 + Math.random() * 4 * (1.5 - life);
@@ -230,6 +260,20 @@ export class Audio {
         const n = 2 + Math.floor(Math.random() * 3);
         for (let i = 0; i < n; i++) this.osc('sine', base, t + i * 0.11, 0.08, 0.1 * (0.4 + life), base * (1.2 + Math.random() * 0.3), this.ambBus);
       }
+    }
+  }
+
+  // Porto (doc 25): ondas quebrando em ciclos e, com a cor de volta, gaivotas; na ressaca o vento assobia.
+  seaAmbient(dt, life) {
+    this.birdTimer -= dt;
+    if (this.birdTimer > 0) return;
+    this.birdTimer = 2.2 + Math.random() * 2.5;
+    const t = this.now();
+    this.noise(t, 2.4, 0.18, 'lowpass', 350, 1400, 0.6, this.ambBus);
+    if (life < 0.5 && Math.random() < 0.4) this.osc('sine', 700 + Math.random() * 300, t + 0.5, 1.6, 0.012, 900, this.ambBus);
+    if (Math.random() < 0.15 + life * 0.6) {
+      const f = 1500 + Math.random() * 500;
+      for (let i = 0; i < 2 + Math.floor(Math.random() * 2); i++) this.osc('sawtooth', f, t + 0.8 + i * 0.18, 0.14, 0.02 * (0.4 + life), f * 0.75, this.ambBus);
     }
   }
 

@@ -1,18 +1,26 @@
 import * as THREE from 'three';
-import { FRAGMENTO, MORTO, BRASA } from './config.js';
+import { FRAGMENTO, MORTO, BRASA, AFOGADO, CORAL, CRACA } from './config.js';
 import { buildFragmento, animateFragmento } from './fragmento.js';
 import { buildMorto, animateMorto } from './morto.js';
+import { buildCoral } from './coral.js';
 import { hitsShape } from './telegraph.js';
 
 // Inimigos comuns (doc 03, seção 3): ocioso → perseguir → preparar → atingir → recuperar.
 // Fragmento do Silêncio na Mata Viva; no Sertão Velho, as variações mortas-vivas (doc 24): começam
-// enterradas e saem da cova quando o herói chega perto; a de brasa explode ao cair.
+// enterradas e saem da cova quando o herói chega perto; a de brasa explode ao cair. No Porto de Santos (doc 25):
+// afogados do cais (sobem do mar como os mortos da cova), coral (Fragmento de coral) e craca, que cospe água
+// de longe: para a `spit.keep` m do herói e marca um círculo sob ele.
 
 const KINDS = {
   silencio: { cfg: FRAGMENTO, name: 'Fragmento do Silêncio', source: 'Lascas do Fragmento', height: 1.5, build: () => buildFragmento(), anim: animateFragmento, deadDur: 0.5 },
   morto: { cfg: MORTO, name: 'Morto-vivo do Silêncio', source: 'Garras do morto-vivo', height: 1.9, build: (i) => buildMorto('morto', i), anim: animateMorto, deadDur: 1.5 },
   brasa: { cfg: BRASA, name: 'Morto-vivo em Brasa', source: 'Garras do morto-vivo', height: 1.9, build: (i) => buildMorto('brasa', i), anim: animateMorto, deadDur: 1.5 },
+  afogado: { cfg: AFOGADO, name: 'Afogado do cais', source: 'Gancho do afogado', height: 1.9, build: (i) => buildMorto('afogado', i), anim: animateMorto, deadDur: 1.5, sea: true },
+  coral: { cfg: CORAL, name: 'Coral do Silêncio', source: 'Galhos de coral', height: 1.5, build: () => buildCoral('coral'), anim: animateFragmento, deadDur: 0.5, shatter: 'coral' },
+  craca: { cfg: CRACA, name: 'Craca do Silêncio', source: 'Cuspe de craca', height: 1.4, build: () => buildCoral('craca'), anim: animateFragmento, deadDur: 0.5, shatter: 'coral' },
 };
+// Inimigos que se desfazem em lascas (Fragmento e criaturas de coral); os demais tombam (mortos-vivos e afogados)
+const shatters = (K) => K.anim === animateFragmento;
 
 export class Fragmento {
   // face: ponto para onde olham parados (a entrada da fase)
@@ -59,6 +67,7 @@ export class Fragmento {
     this.lastHitId = -1;
     this.held = 0;
     this.taunted = 0;
+    this.spitCd = 0;
   }
 
   // Laço do Vaqueiro: preso, não age nem anda (quem arrasta é o vaqueiro); o aviso em curso se desfaz.
@@ -106,10 +115,11 @@ export class Fragmento {
     this.solid = false;
     if (this.tg) G.tg.remove(this.tg);
     this.tg = null;
-    if (this.kind === 'silencio') {
-      G.fx.burst('shards', this.pos.clone().setY(0.8));
+    if (shatters(this.K)) {
+      G.fx.burst(this.K.shatter || 'shards', this.pos.clone().setY(0.8));
       G.audio.play('shatter');
     } else {
+      if (this.K.sea) G.fx.burst('splash', this.pos.clone().setY(0.6), { n: 14 });
       G.fx.burst('bones', this.pos.clone().setY(0.9));
       G.audio.play('collapse');
     }
@@ -156,7 +166,7 @@ export class Fragmento {
     if (!this.alive) {
       this.dieT += dt;
       if (this.blast) this.updateBlast(dt);
-      if (this.kind === 'silencio') {
+      if (shatters(this.K)) {
         const k = Math.min(1, this.dieT / 0.5);
         this.model.root.scale.setScalar(Math.max(0.001, 1 - k));
         this.model.root.visible = k < 1;
@@ -173,6 +183,7 @@ export class Fragmento {
     }
     const pl = G.player;
     this.taunted = Math.max(0, this.taunted - dt);
+    this.spitCd = Math.max(0, this.spitCd - dt);
     if (this.held > 0) {
       this.held = Math.max(0, this.held - dt);
       this.K.anim(this.model, 'idle', this.t, 0, dt);
@@ -187,7 +198,7 @@ export class Fragmento {
     const seen = !pl.hidden || this.taunted > 0;
 
     let move = new THREE.Vector3();
-    if (!pl.alive && (this.state === 'warn' || this.state === 'strike')) {
+    if (!pl.alive && (this.state === 'warn' || this.state === 'strike' || this.state === 'spit')) {
       if (this.tg) G.tg.remove(this.tg);
       this.tg = null;
       this.setState('return');
@@ -198,8 +209,8 @@ export class Fragmento {
           this.setState('rise');
           this.model.root.visible = true;
           this.facing = Math.atan2(toP.x, toP.z);
-          G.fx.burst('grave', this.pos.clone().setY(0.15));
-          G.audio.play('rise');
+          G.fx.burst(this.K.sea ? 'splash' : 'grave', this.pos.clone().setY(0.15), { n: 26 });
+          G.audio.play(this.K.sea ? 'splash' : 'rise');
         }
         break;
       case 'rise':
@@ -222,6 +233,16 @@ export class Fragmento {
           break;
         }
         this.facing = Math.atan2(toP.x, toP.z);
+        // Craca: de longe, para e cospe (círculo sob o herói); de perto, golpeia como o Fragmento
+        if (cfg.spit && surf > cfg.attackRange && dist <= cfg.spit.range) {
+          if (this.spitCd <= 0 && pl.alive && !pl.adrift) {
+            this.setState('spit');
+            this.shape = { x: pl.pos.x, z: pl.pos.z, radius: cfg.spit.radius };
+            this.tg = G.tg.add({ ...this.shape, color: '#3ab8ff' });
+            G.audio.play('warn', cfg.spit.warn);
+          } else if (dist > cfg.spit.keep) move = toP.clone().normalize().multiplyScalar(cfg.speed);
+          break;
+        }
         if (surf <= cfg.attackRange) {
           this.setState('warn');
           this.dir = toP.clone().normalize();
@@ -241,6 +262,19 @@ export class Fragmento {
         break;
       case 'strike':
         if (this.st >= 0.3) this.setState('recover');
+        break;
+      case 'spit':
+        this.facing = Math.atan2(this.shape.x - this.pos.x, this.shape.z - this.pos.z);
+        G.tg.setProgress(this.tg, this.st / cfg.spit.warn);
+        if (this.st >= cfg.spit.warn) {
+          G.tg.resolve(this.tg);
+          this.tg = null;
+          if (hitsShape(this.shape, pl.pos.x, pl.pos.z, pl.radius)) pl.takeDamage(cfg.spit.dmg, this.K.source);
+          G.fx.burst('splash', new THREE.Vector3(this.shape.x, 0.3, this.shape.z), { n: 18 });
+          G.audio.play('jet');
+          this.spitCd = cfg.spit.cd;
+          this.setState('recover');
+        }
         break;
       case 'recover':
         if (this.st >= cfg.cone.recover) this.setState('chase');
@@ -288,11 +322,12 @@ export class Fragmento {
     let diff = this.facing - this.model.root.rotation.y;
     diff = Math.atan2(Math.sin(diff), Math.cos(diff));
     this.model.root.rotation.y += diff * Math.min(1, dt * 10);
-    const p = this.state === 'warn' ? this.st / cfg.cone.warn
+    const p = this.state === 'spit' ? Math.min(1, this.st / cfg.spit.warn)
+      : this.state === 'warn' ? this.st / cfg.cone.warn
       : this.state === 'strike' ? this.st / 0.3
         : this.state === 'rise' ? this.st / cfg.rise
           : 0;
-    this.K.anim(this.model, this.state === 'lost' ? 'idle' : this.state, this.t, p, dt);
+    this.K.anim(this.model, this.state === 'lost' ? 'idle' : this.state === 'spit' ? 'warn' : this.state, this.t, p, dt);
     this.model.flash(this.flash);
   }
 }

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { PLAYER, CANGACEIRO, VAQUEIRO, MALOKA } from './config.js';
+import { PLAYER, CANGACEIRO, VAQUEIRO, MALOKA, MAR } from './config.js';
 import { buildLutador, lutadorPose, animateLocs } from './lutador.js';
 import { buildSkinnedCangaceiro } from './cangaceiro-asset.js';
 import { buildSkinnedVaqueiro } from './vaqueiro-asset.js';
@@ -84,6 +84,9 @@ export class Player {
     this.victory = false;
     this.animT = 0;
     this.actionSeq = 0;
+    this.push = null;
+    this.swim = null;
+    this.moveMul = 1;
     this.rig.root.rotation.y = this.facing;
     this.dropRope();
     this.clearStealth();
@@ -97,6 +100,11 @@ export class Player {
   // rastro e os chefes não usam o golpe básico nele (enemies.js, boss.js, mula.js).
   get hidden() {
     return this.heroName === 'maloka' && this.alive && this.unseen > 0;
+  }
+
+  // Empurrado ou na água (Porto, doc 25): sem controle até a corrente devolver o herói ao deque
+  get adrift() {
+    return !!(this.push || this.swim);
   }
 
   get invulnerable() {
@@ -450,6 +458,61 @@ export class Player {
     if (msg) this.G.hud.toast(msg);
   }
 
+  // ---------- Mar (Porto de Santos, doc 25) ----------
+  // Empurrão de golpes e ondas: desliza `dist` m na direção `dir` em `dur` s, sem controle e cancelando a ação.
+  // No deque cercado de mar (world.overboard), passar da borda derruba o herói na água.
+  shove(dir, dist, dur = 0.32) {
+    if (!this.alive || this.victory || this.swim || dist <= 0) return;
+    this.push = { dir: dir.clone().setY(0).normalize(), speed: dist / dur, t: 0, dur };
+    this.action = null;
+    this.queued = false;
+    this.dodge = null;
+    this.dropRope();
+  }
+
+  updatePush(dt) {
+    const p = this.push, w = this.G.world;
+    p.t += dt;
+    const k = p.t < p.dur * 0.7 ? 1 : 0.5;
+    const nx = this.pos.x + p.dir.x * p.speed * k * dt, nz = this.pos.z + p.dir.z * p.speed * k * dt;
+    if (w.walkable(nx, nz)) this.pos.set(nx, 0, nz);
+    else if (w.overboard?.(nx, nz)) {
+      this.pos.set(nx, 0, nz);
+      return this.fall();
+    } else this.tryMove(nx - this.pos.x, nz - this.pos.z);
+    if (p.t >= p.dur) this.push = null;
+  }
+
+  // Na água: leva dano, boia por MAR.fall.swim s e a corrente o devolve à beirada (world.rescue).
+  fall() {
+    const G = this.G;
+    this.push = null;
+    // escorrega da beirada para a água, boia e volta
+    this.swim = { t: 0, start: this.pos.clone(), from: G.world.seaPoint(this.pos.x, this.pos.z), to: G.world.rescue(this.pos.x, this.pos.z) };
+    G.fx.burst('splash', this.pos.clone().setY(0.2), { n: 30 });
+    G.audio.play('splash');
+    G.hud.toast('Caiu no mar!');
+    this.takeDamage(MAR.fall.dmg, 'Caiu no mar');
+  }
+
+  updateSwim(dt) {
+    const s = this.swim;
+    s.t += dt;
+    const back = MAR.fall.swim;
+    if (s.t < 0.25) this.pos.lerpVectors(s.start, s.from, s.t / 0.25);
+    else if (s.t > back) {
+      const k = Math.min(1, (s.t - back) / 0.6), e = k * k * (3 - 2 * k);
+      this.pos.lerpVectors(s.from, s.to, e);
+      if (k >= 1) {
+        this.swim = null;
+        this.G.fx.burst('splash', this.pos.clone().setY(0.2), { n: 12 });
+      }
+    } else {
+      this.pos.copy(s.from);
+      if (Math.random() < dt * 6) this.G.fx.burst('splash', this.pos.clone().setY(0.1), { n: 3 });
+    }
+  }
+
   // ---------- Dano ----------
   takeDamage(amount, label) {
     if (!this.alive || this.victory) return false;
@@ -526,12 +589,12 @@ export class Player {
     if (this.target && !this.target.alive) this.target = null;
 
     const move = new THREE.Vector3();
-    if (this.alive && !this.victory) {
+    if (this.alive && !this.victory && !this.adrift) {
       move.set(input.axisX, 0, input.axisZ);
       if (move.lengthSq() > 1) move.normalize();
     }
 
-    if (this.alive && !this.victory) {
+    if (this.alive && !this.victory && !this.adrift) {
       if (input.pressed('Tab')) this.cycleTarget();
       if (input.pressed('attack')) this.attack();
       if (input.pressed('rasteira')) this.skill('rasteira');
@@ -584,7 +647,7 @@ export class Player {
         G.fx.burst('dust', this.pos, { n: 5 });
       }
     } else if (move.lengthSq() > 0) {
-      vel.copy(move).multiplyScalar(this.kit.speed * speedMul);
+      vel.copy(move).multiplyScalar(this.kit.speed * speedMul * this.moveMul);
       if (!this.action) {
         const want = Math.atan2(move.x, move.z);
         let diff = want - this.facing;
@@ -593,7 +656,9 @@ export class Player {
       }
     }
     this.moving = vel.length();
-    this.tryMove(vel.x * dt, vel.z * dt);
+    if (this.swim) this.updateSwim(dt);
+    else if (this.push) this.updatePush(dt);
+    else this.tryMove(vel.x * dt, vel.z * dt);
 
     // Pulo
     if (!this.grounded || this.vy > 0) {
@@ -639,6 +704,7 @@ export class Player {
     if (this.forcePose) state = this.forcePose;
     else if (!this.alive) state = 'dead';
     else if (this.victory) state = 'victory';
+    else if (this.adrift) state = 'hit';
     else if (this.dodge) {
       state = 'dodge';
       p = this.dodge.t / PLAYER.dodge.dur;
@@ -654,7 +720,8 @@ export class Player {
       (r.play || r.animate).call(r, state,dt,p,this.moving,actionId!==this.lastVisualAction && actionId!==0);   // play: Cangaceiro
       this.lastVisualAction=actionId;
     } else applyPose(r, lutadorPose(state, this.animT, p), dt, fast ? 28 : 14);
-    r.root.position.y = this.y;
+    // na água: afunda até o peito e boia
+    r.root.position.y = this.y + (this.swim ? -0.95 + Math.sin(this.animT * 4) * 0.06 : 0);
     let diff = this.facing - r.root.rotation.y;
     diff = Math.atan2(Math.sin(diff), Math.cos(diff));
     r.root.rotation.y += diff * Math.min(1, dt * 20);

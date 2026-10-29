@@ -91,6 +91,25 @@ export const BRASA = {
   burst: { delay: 0.35, warn: 1.2, radius: 2.6, dmg: 18 },
 };
 
+// Porto de Santos (fase 3, doc 25): afogados do cais (variação do morto-vivo: sobem do mar pela beira do cais),
+// coral do Silêncio (variação do Fragmento, de perto) e craca do Silêncio (cospe água de longe: círculo sob o
+// herói, mantendo distância). Proposta inicial, a validar.
+export const AFOGADO = {
+  ...MORTO,
+  hp: 80,
+  speed: 2.2,
+  rise: 1.4,
+  cone: { angle: 70, range: 2.4, warn: 1.0, dmg: 15, recover: 1.2 },
+};
+export const CORAL = { ...FRAGMENTO, hp: 70, speed: 2.3 };
+export const CRACA = {
+  ...FRAGMENTO,
+  hp: 55,
+  speed: 2.0,
+  detect: 9,
+  spit: { range: 9, keep: 5, warn: 1.3, radius: 1.8, dmg: 14, cd: 3.2 },
+};
+
 export const CURUPIRA = {
   corruption: 2400,
   radius: 0.85,
@@ -127,6 +146,47 @@ export const MULA = {
   basic: { windup: 0.55, hit: 0.45, angle: 80, range: 2.8, dmg: 14, cd: 2.4 }, // patada com o casco dianteiro, sem aviso (proposta)
   recover: 1.8,
   recoverInterrupted: 3,
+};
+
+// Iara e Ipupiara (chefes em dupla do Porto de Santos, doc 25). Proposta inicial, a validar: vida, golpes, dano
+// e tempos. Barras separadas, sem vida ligada (decisão do usuário, 28/10/2026); a luta acaba com os dois resolvidos.
+// Ipupiara: corpo a corpo no deque. Ciclo aproximar → rabada → recuperar → arremetida → recuperar; mordida (basic,
+// sem aviso) com o herói perto. shove: metros que o golpe empurra o herói (para fora do deque = cai no mar).
+export const IPUPIARA = {
+  hp: 1900,
+  radius: 1.2,
+  speed: 2.4,
+  startWait: 1.5,
+  approachMax: 3,
+  approachRange: 2.4,
+  tail: { warn: 1.4, angle: 140, range: 5, dmg: 22, shove: 5 },                 // rabada: cone atrás
+  lunge: { warn: 1.6, width: 2.6, length: 12, speed: 13, dmg: 26, shove: 4 },     // arremetida em linha
+  basic: { windup: 0.5, hit: 0.4, angle: 70, range: 3, dmg: 14, cd: 2.4 },       // mordida, sem aviso
+  recover: 1.8,
+};
+// Iara: na água, a `edge` m do centro do deque. Ciclo nadar → jato → recuperar → jato → nadar → Canto → recuperar.
+// Canto: conjuração; puxa o herói `pull` m/s em direção a ela e, se terminar, arrasta `drag` m (para o mar). Q interrompe.
+export const IARA = {
+  corruption: 1500,
+  radius: 1.0,
+  edge: 13.2,
+  swim: 4,                     // m/s ao longo da borda
+  startWait: 3,
+  jet: { warn: 1.5, radius: 2.2, dmg: 18 },
+  song: { cast: 3.6, pull: 1.6, drag: 7, dmg: 16 },
+  basic: { windup: 0.5, hit: 0.4, angle: 90, range: 2.6, dmg: 10, cd: 2.6 },   // rabanada, sem aviso
+  recover: 2.2,
+  recoverInterrupted: 3,
+};
+// O mar (mecânica da dupla): relógio próprio enquanto houver chefe de pé. Ressaca: faixa larga que atravessa o
+// deque mirando o herói; a espuma corre a `speed` m/s, causa dano e empurra no sentido da onda. Maré alta (a cada
+// `every`º evento): o anel entre `inner` e a borda fica coberto por `last` s. Cair no mar: dano e `swim` s na água.
+export const MAR = {
+  first: 9,
+  every: 11,
+  wave: { warn: 2.0, width: 7, dmg: 18, shove: 5, speed: 16 },
+  tide: { warn: 2.4, inner: 7.5, last: 5, dps: 8, slow: 0.6, every: 3 },
+  fall: { dmg: 12, swim: 1.4 },
 };
 
 // Cinemáticas do chefe (doc 20). Tempos visuais, fora do combate; os clipes

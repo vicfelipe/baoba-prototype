@@ -41,9 +41,12 @@ export class HUD {
     this.tKind = $('#tKind');
     this.tPortrait = $('#tPortrait');
     this.bossBar = $('#bossBar');
-    this.bFill = $('#bossBar .bar .fill');
-    this.bGhost = $('#bossBar .bar .ghost');
-    this.bVal = $('#bossVal');
+    // uma barra por alvo do chefe (a dupla do Porto tem duas, doc 25)
+    this.bBars = [...document.querySelectorAll('#bossBar .bar.boss')].map((el) => ({
+      el, fill: el.querySelector('.fill'), ghost: el.querySelector('.ghost'),
+      name: el.querySelector('b'), val: el.querySelector('#bossVal, .bval'),
+    }));
+    this.castName = $('#castName');
     this.cast = $('#castBar');
     this.castFill = $('#castBar .fill');
     this.obj = $('#objList');
@@ -137,14 +140,21 @@ export class HUD {
     }
 
     const boss = G.boss;
-    this.bossBar.classList.toggle('hidden', !boss.targetable);
-    if (boss.targetable) {
-      const pct = (boss.hp / boss.maxHp) * 100;
-      this.bFill.style.width = pct + '%';
-      this.bGhost.style.width = pct + '%';
-      this.bVal.textContent = `${Math.ceil(boss.hp)} / ${boss.maxHp}`;
-    }
+    const parts = (boss.parts || [boss]).filter((b) => b.targetable);
+    this.bossBar.classList.toggle('hidden', !parts.length);
+    this.bBars.forEach((bar, i) => {
+      const b = parts[i];
+      bar.el.classList.toggle('hidden', !b);
+      if (!b) return;
+      const pct = (b.hp / b.maxHp) * 100;
+      bar.fill.style.width = pct + '%';
+      bar.ghost.style.width = pct + '%';
+      bar.name.textContent = b.name;
+      bar.val.textContent = `${Math.ceil(b.hp)} / ${b.maxHp}`;
+      bar.el.classList.toggle('water', b.barStyle === 'water');
+    });
     if (boss.cast) {
+      this.castName.textContent = boss.cast.name || 'Chamado do Silêncio';
       this.cast.classList.remove('hidden', 'broken');
       this.castFill.style.width = Math.min(100, (boss.cast.t / boss.cast.dur) * 100) + '%';
     } else if (!this.cast.classList.contains('broken')) this.cast.classList.add('hidden');
@@ -183,7 +193,7 @@ export class HUD {
     const h = window.innerHeight;
     const ents = [{ key: G.player, name: G.player.kit.name, cls: 'player self', ent: G.player }];
     for (const e of G.enemies()) if (e.alive && (e.targetable || (!e.isBoss && e.state !== 'buried'))) ents.push({ key: e, name: e.name, cls: 'enemy', ent: e, hp: !e.isBoss });
-    if (G.boss.freed) ents.push({ key: G.boss, name: 'Curupira', cls: 'player', ent: G.boss });
+    for (const b of G.boss.parts || [G.boss]) if (b.freed) ents.push({ key: b, name: b.allyName || 'Curupira', cls: 'player', ent: b });
     const seen = new Set();
     for (const it of ents) {
       seen.add(it.key);

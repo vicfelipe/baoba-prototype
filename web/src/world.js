@@ -56,7 +56,7 @@ export function inArena(x, z, margin = 0) {
 }
 
 // Esfera irregular para copas e arbustos (volumes de folhagem)
-function lumpySphere(seed, detail = 22) {
+export function lumpySphere(seed, detail = 22) {
   const g = new THREE.SphereGeometry(1, detail, Math.round(detail * 0.7));
   const p = g.attributes.position;
   const v = new THREE.Vector3();
@@ -74,7 +74,7 @@ function lumpySphere(seed, detail = 22) {
 // Casca de cartões de folhagem sobre a mesma esfera irregular das copas. Cada cartão fica num ponto da
 // superfície, guarda a normal da esfera (volume e luz da copa inteira) e abre na tela pelo atributo
 // leafCorner (billboard no shader). A silhueta vira um recorte de folhas em vez de uma bolha lisa.
-function leafShell(seed, n, size) {
+export function leafShell(seed, n, size) {
   const r = rng(seed * 977 + 13);
   const pos = [];
   const nor = [];
@@ -118,7 +118,7 @@ function leafShell(seed, n, size) {
 }
 
 // Material dos cartões: abre cada cartão no espaço da câmera, com tremor por folha e balanço da copa
-function leafCardMaterial(map) {
+export function leafCardMaterial(map) {
   const mat = new THREE.MeshLambertMaterial({ color: '#ffffff', map, alphaTest: 0.5 });
   injectCorruption(mat, {
     key: 'leafcard',
@@ -144,7 +144,7 @@ function leafCardMaterial(map) {
 }
 
 // Tronco: base alargada em sapopemas, afinando para cima e com leve curva
-function trunkGeometry() {
+export function trunkGeometry() {
   const g = new THREE.CylinderGeometry(0.75, 1, 1, 12, 7);
   g.translate(0, 0.5, 0);
   const p = g.attributes.position;
@@ -171,7 +171,7 @@ function mushCapGeometry() {
 }
 
 // Fronde de palmeira: cartão ao longo de +z, caindo na ponta e dobrado em V na nervura
-function frondGeometry() {
+export function frondGeometry() {
   const g = new THREE.PlaneGeometry(1, 1, 2, 8);
   const p = g.attributes.position;
   for (let i = 0; i < p.count; i++) {

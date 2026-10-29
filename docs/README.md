@@ -4,6 +4,8 @@ Revisão v0.3 · 25/10/2026 · Estado: protótipo de combate implementado; revis
 
 ## Entrega jogável atual
 
+**Fase 3 — Porto de Santos (28/10):** escolhida na tela de título. Dia de ressaca no cais, no canal, no calçadão e na praia, com 3 afogados do cais e 2 criaturas de coral, uma garrafa com carta e o trapiche até um deque no meio do mar. Lá, a Iara (na água, liberta ao fim) e o Ipupiara (no deque, vencido) lutam juntos, e o mar é a mecânica da dupla: ressaca, maré alta e queda no mar. A vitória acalma o mar e abre o sol. Ver [25 — Porto de Santos](<25 - Porto de Santos fase 3.md>).
+
 **Fase 2 — Sertão Velho (27/10):** escolhida na tela de título. Noite gótica no arraial abandonado, 5 mortos-vivos (variações do Fragmento) saindo das covas, folheto de cordel no cemitério, portão de ferro e a Mula sem Cabeça no terreiro do casarão; a vitória traz o amanhecer. Ver [24 — Sertão Velho](<24 - Sertao Velho fase 2.md>).
 
 **Cangaceiro (26/10):** classe DPS Ranged produzida pelo pipeline Lunia a partir das referências do usuário: modelo, armas (bacamarte, pistolas, peixeira), rig e 11 clipes, no visualizador do protótipo web. Ainda não jogável. Ver [21 — Cangaceiro: produção e integração](<21 - Cangaceiro producao e integracao.md>).
@@ -55,6 +57,7 @@ Este recorte é uma **proposta operacional da revisão**, não uma confirmação
 | [21 — Cangaceiro: produção e integração](<21 - Cangaceiro producao e integracao.md>) | DPS Ranged: referências, modelo, armas em ossos próprios, mãos em IK guiadas pela arma, clipes, validação e limites |
 | [23 — Vaqueiro: produção](<23 - Vaqueiro producao.md>) | Tanker jogável: referências do GLM, modelo, capturas Mixamo ajustadas ao corpo, laço e berrante, kit no jogo e testes |
 | [24 — Sertão Velho](<24 - Sertao Velho fase 2.md>) | Fase 2: cenário gótico do sertão, mortos-vivos, Mula como chefe, amanhecer, escolha de fase e testes |
+| [25 — Porto de Santos](<25 - Porto de Santos fase 3.md>) | Fase 3: cais, praia e mar em dia de ressaca; afogados e corais; Iara e Ipupiara em dupla no deque do trapiche, com o mar como mecânica; decisões do usuário e testes |
 
 Instruções atuais do usuário prevalecem. Dentro da documentação, 01 define escopo; cada documento especializado é autoridade no seu assunto. Números do combate pertencem ao 03; câmera e movimento ao 08; orçamento ao 07. Alterar uma decisão exige reconciliar os documentos afetados. Exemplos de prompts não ampliam escopo.
 

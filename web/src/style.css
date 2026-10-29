@@ -95,6 +95,8 @@ kbd {
 .bar.boss .fill { background: linear-gradient(180deg, #ff9a7a 0%, #e01e14 40%, #8a0a06 100%); }
 .bar.boss .val { justify-content: center; padding: 0; font-size: 12px; gap: 8px; }
 .bar.boss .val b { color: #ffe6a0; }
+.bar.boss + .bar.boss { margin-top: 6px; }
+.bar.boss.water .fill { background: linear-gradient(180deg, #a8ecff 0%, #2a8ad0 40%, #0a3a72 100%); }
 #castBar { position: relative; height: 18px; margin-bottom: 4px; margin-left: 20%; margin-right: 20%; background: #1c1230; border: 1px solid #000; box-shadow: 0 0 0 1px #7a5ac8; overflow: hidden; }
 #castBar .fill { position: absolute; inset: 0 auto 0 0; width: 0; background: linear-gradient(180deg, #d9b8ff, #8a5ae8 50%, #4a2a9a); }
 #castBar .label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 5px; font: 700 11px/1 var(--ui); color: #fff; text-shadow: 0 0 2px #000, 1px 1px 0 #000; }
