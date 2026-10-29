@@ -1,0 +1,27 @@
+{
+  "name": "Baoba.Tests.EditMode",
+  "rootNamespace": "Baoba.Tests.EditMode",
+  "references": [
+    "Baoba.Core",
+    "Baoba.Gameplay",
+    "Baoba.Content",
+    "Baoba.Unity",
+    "Baoba.Editor",
+    "Unity.RenderPipelines.Universal.Runtime",
+    "Unity.RenderPipelines.Core.Runtime"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}

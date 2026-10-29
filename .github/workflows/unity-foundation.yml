@@ -1,0 +1,49 @@
+name: Unity M0 validation
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/unity-foundation-ci]
+    paths:
+      - unity/**
+      - .github/workflows/unity-foundation.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: baoba-unity-m0
+  cancel-in-progress: false
+
+jobs:
+  foundation:
+    if: github.repository == 'vicfelipe/baoba-prototype' && github.actor == 'vicfelipe' && github.ref == 'refs/heads/codex/unity-foundation-ci'
+    runs-on: [self-hosted, Windows, X64, baoba-unity]
+    timeout-minutes: 90
+    env:
+      UNITY_EDITOR_PATH: ${{ vars.UNITY_EDITOR_PATH }}
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: unity
+    steps:
+      - name: Checkout reviewed Unity source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          lfs: true
+          persist-credentials: false
+          sparse-checkout: unity
+      - name: Verify metadata and package lock
+        run: ./Tools/Validation/Test-Repository.ps1
+      - name: Import, validate, test, build and startup smoke
+        run: ./Tools/Unity/Invoke-Unity.ps1 -Action All
+      - name: Verify imported metadata
+        run: ./Tools/Validation/Test-Repository.ps1
+      - name: Preserve test reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: unity-m0-test-results
+          path: unity/TestResults/*.xml
+          retention-days: 7
+          if-no-files-found: warn
