@@ -29,7 +29,7 @@ export class Cinematic {
     this.el.id = 'cine';
     this.el.innerHTML = `<div class="bar top"></div><div class="bar bottom"></div><div class="flash"></div>
       <div class="namecard"><div class="nc-kicker"></div><div class="nc-name"></div><div class="nc-epithet"></div></div>
-      <div class="skip"><kbd>Enter</kbd> pular</div>`;
+      <div class="skip"><span class="key-only"><kbd>Enter</kbd> pular</span><span class="touch-only">Toque para pular</span></div>`;
     parent.append(this.el);
     this.active = false;
     this._pos = new THREE.Vector3();

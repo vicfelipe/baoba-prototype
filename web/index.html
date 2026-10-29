@@ -2,7 +2,12 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0d1410" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="./manifest.webmanifest" />
   <title>Baobá — O Eco da Mata</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Sans:wght@500;700;800&display=swap" rel="stylesheet" />
@@ -49,7 +54,7 @@
     <div id="banner"></div>
     <div id="hint"></div>
     <div id="toast"></div>
-    <div id="interact"><kbd>F</kbd> <span></span></div>
+    <div id="interact"><kbd class="key-only">F</kbd><kbd class="touch-only">Tocar</kbd> <span></span></div>
 
     <!-- Registro (canto inferior esquerdo) -->
     <div id="log">
@@ -61,7 +66,7 @@
     <div id="bossBar" class="hidden">
       <div id="castBar" class="hidden">
         <div class="fill"></div>
-        <span class="label"><svg viewBox="0 0 24 24" class="shield"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z"/></svg> Chamado do Silêncio — <b>Interromper (Q)</b></span>
+        <span class="label"><svg viewBox="0 0 24 24" class="shield"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z"/></svg> Chamado do Silêncio — <b>Interromper<span class="key-only"> (Q)</span></b></span>
       </div>
       <div class="bar boss"><div class="ghost"></div><div class="fill"></div><span class="val"><b id="bossName">Curupira corrompido</b> <span id="bossVal"></span></span></div>
     </div>
@@ -92,6 +97,14 @@
         <svg viewBox="0 0 48 48"><path d="M16 22V10a3 3 0 0 1 6 0v10V6a3 3 0 0 1 6 0v14V9a3 3 0 0 1 6 0v13-6a3 3 0 0 1 6 0v12c0 9-6 16-14 16-6 0-10-3-13-8l-7-11a3 3 0 0 1 5-3z" /></svg>
         <kbd>F</kbd>
       </div>
+      <div class="slot small touch-only" data-skill="target" title="Trocar alvo">
+        <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="13" fill="none" stroke-width="5" /><path d="M22 4h4v10h-4zM22 34h4v10h-4zM4 22h10v4H4zM34 22h10v4H34z" /></svg>
+      </div>
+    </div>
+    <!-- Toque (celular): joystick flutuante e pausa; os botões de ação são os slots acima -->
+    <div id="touchUi" class="touch-only">
+      <div id="stickZone"><div id="stickBase"></div><div id="stickKnob"></div></div>
+      <button id="btnPause" aria-label="Pausa"><svg viewBox="0 0 24 24"><path d="M6 4h4v16H6zM14 4h4v16h-4z" /></svg></button>
     </div>
     <div id="memoryBar"><div class="fill"></div><span>[<i id="memLabel">Memória da Mata</i>] <b id="memPct">0%</b></span></div>
   </div>
@@ -113,15 +126,23 @@
           <button class="hero" data-hero="maloka" role="radio" aria-checked="false">Maloka <small>DPS furtivo</small></button>
         </div>
         <p class="class-line" id="heroLine"><strong>Capoeirista</strong> · DPS corpo a corpo — mobilidade, esquivas rítmicas e chutes devastadores.</p>
-        <div class="controls">
+        <div class="controls key-only">
           <div><kbd>WASD</kbd> mover</div>
-          <div><kbd>Clique</kbd>/<kbd>J</kbd> <span id="ctlAttack">golpes</span></div>
-          <div><kbd>Q</kbd> <span id="ctlQ">Rasteira — interrompe</span></div>
-          <div><kbd>E</kbd> <span id="ctlE">Meia-lua — área</span></div>
+          <div><kbd>Clique</kbd>/<kbd>J</kbd> <span data-ctl="attack">golpes</span></div>
+          <div><kbd>Q</kbd> <span data-ctl="q">Rasteira — interrompe</span></div>
+          <div><kbd>E</kbd> <span data-ctl="e">Meia-lua — área</span></div>
           <div><kbd>Shift</kbd> esquiva</div>
           <div><kbd>Espaço</kbd> pulo</div>
           <div><kbd>Tab</kbd> trocar alvo</div>
           <div><kbd>F</kbd> interagir · <kbd>Esc</kbd> pausa</div>
+        </div>
+        <div class="controls touch-only">
+          <div><b class="dot stick"></b> arraste à esquerda: mover</div>
+          <div><b class="dot combo"></b> <span data-ctl="attack">golpes</span></div>
+          <div><b class="dot q"></b> <span data-ctl="q">Rasteira — interrompe</span></div>
+          <div><b class="dot e"></b> <span data-ctl="e">Meia-lua — área</span></div>
+          <div><b class="dot dodge"></b> esquiva · <b class="dot small"></b> pulo</div>
+          <div>toque no inimigo: alvo · <b>❚❚</b> pausa</div>
         </div>
         <button id="btnStart" class="btn" disabled>Preparando personagem…</button>
         <button id="btnLutador" class="btn ghost" disabled>Ver personagens · modelos e animações</button>
@@ -144,7 +165,7 @@
       <div class="card small">
         <h2>Você caiu</h2>
         <p id="defeatText" class="lead">A mata ainda espera por você.</p>
-        <button class="btn" data-act="retry">Tentar de novo <small>R</small></button>
+        <button class="btn" data-act="retry">Tentar de novo <small class="key-only">R</small></button>
       </div>
     </section>
 
@@ -154,9 +175,16 @@
         <h1 id="completeQuote" class="quote">“A mata lembra de quem cuida dela.”</h1>
         <p id="completeLead" class="lead">O Curupira voltou a proteger a clareira. A cor voltou à Mata Viva.</p>
         <p id="stats" class="note"></p>
-        <button class="btn" data-act="restart">Jogar de novo <small>R</small></button>
+        <button class="btn" data-act="restart">Jogar de novo <small class="key-only">R</small></button>
       </div>
     </section>
+  </div>
+
+  <!-- Celular em pé: o jogo pausa até a tela ficar deitada -->
+  <div id="rotate" role="alert">
+    <div class="phone"></div>
+    <p>Gire o celular para a horizontal</p>
+    <small>Baobá foi feito para a tela deitada.</small>
   </div>
 
   <script type="module" src="./src/main.js"></script>

@@ -16,7 +16,7 @@
 }
 
 * { box-sizing: border-box; }
-html, body { margin: 0; height: 100%; overflow: hidden; background: #0d1410; font-family: var(--ui); color: var(--text); user-select: none; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: #0d1410; font-family: var(--ui); color: var(--text); user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; touch-action: none; overscroll-behavior: none; }
 canvas#game { display: block; width: 100vw; height: 100vh; outline: none; }
 .hidden { display: none !important; }
 .outline { text-shadow: 0 0 2px #000, 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; }
@@ -155,9 +155,10 @@ kbd {
 .ftext.big.ambush { color: #ff4a4a; }
 
 /* ---------- Telas ---------- */
-#screens .screen { position: fixed; inset: 0; display: none; place-items: center; background: radial-gradient(circle at 50% 45%, rgba(0,0,0,.15), rgba(0,0,0,.7)); padding: 16px; }
-#screens .screen.show { display: grid; }
-.card { width: min(620px, 100%); padding: 26px 30px; text-align: center; background: linear-gradient(180deg, rgba(30,24,18,.94), rgba(14,11,8,.96)); border: 1px solid var(--gold-2); box-shadow: 0 0 0 1px #000, inset 0 0 0 4px rgba(232,196,106,.08), 0 10px 40px rgba(0,0,0,.7); animation: pop .35s ease-out; }
+/* flex + margin auto no cartão: centraliza e, quando não cabe (celular deitado), rola sem cortar o topo */
+#screens .screen { position: fixed; inset: 0; display: none; overflow-y: auto; touch-action: pan-y; background: radial-gradient(circle at 50% 45%, rgba(0,0,0,.15), rgba(0,0,0,.7)); padding: 16px max(16px, env(safe-area-inset-right)) 16px max(16px, env(safe-area-inset-left)); }
+#screens .screen.show { display: flex; }
+.card { margin: auto; width: min(620px, 100%); padding: 26px 30px; text-align: center; background: linear-gradient(180deg, rgba(30,24,18,.94), rgba(14,11,8,.96)); border: 1px solid var(--gold-2); box-shadow: 0 0 0 1px #000, inset 0 0 0 4px rgba(232,196,106,.08), 0 10px 40px rgba(0,0,0,.7); animation: pop .35s ease-out; }
 .card.small { width: min(400px, 100%); }
 @keyframes pop { from { transform: scale(.96); opacity: 0; } }
 .kicker { margin: 0; font: 700 13px/1 var(--ui); letter-spacing: .35em; text-transform: uppercase; color: var(--cyan); }
@@ -230,3 +231,95 @@ body.cine #skillbar, body.cine #memoryBar, body.cine #hint, body.cine #interact,
   color: inherit; font: 700 15px/1.2 var(--ui); cursor: pointer; text-align: left; }
 .hero-pick .hero small { display: block; font-weight: 500; font-size: 11px; opacity: .75; }
 .hero-pick .hero.on { border-color: #ffd27a; background: rgba(255,178,74,.22); box-shadow: 0 0 0 1px #ffd27a inset; }
+
+/* ---------- Celular e tablet (touch.js liga body.touch) ----------
+   No PC nada daqui se aplica, salvo a compactação por altura no fim (janelas baixas). */
+body:not(.touch) .touch-only { display: none !important; }
+body.touch .key-only { display: none !important; }
+
+#touchUi { position: absolute; inset: 0; }
+#stickZone { position: absolute; left: 0; bottom: 18px; width: 46vw; height: 62%; pointer-events: auto; touch-action: none; }
+#stickBase, #stickKnob { position: fixed; transform: translate(-50%, -50%); border-radius: 50%; pointer-events: none; }
+#stickBase { left: calc(env(safe-area-inset-left) + 96px); top: calc(100% - 104px); width: 112px; height: 112px; border: 2px solid rgba(232,196,106,.55); background: radial-gradient(circle, rgba(20,14,8,.15), rgba(20,14,8,.45)); opacity: .45; transition: opacity .15s; }
+#stickBase.on { opacity: .9; }
+#stickKnob { left: calc(env(safe-area-inset-left) + 96px); top: calc(100% - 104px); width: 50px; height: 50px; background: radial-gradient(circle at 40% 35%, #ffe2a0, #c88a2a 70%); border: 1px solid #000; box-shadow: 0 2px 6px rgba(0,0,0,.6); opacity: .8; }
+#btnPause { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 40px; height: 34px; padding: 0; pointer-events: auto; background: var(--panel); border: 1px solid var(--gold-2); border-radius: 4px; }
+#btnPause svg { width: 18px; height: 18px; fill: var(--gold); }
+body.cine #touchUi { display: none; }
+
+#rotate { position: fixed; inset: 0; z-index: 200; display: none; place-content: center; justify-items: center; gap: 10px; padding: 24px; text-align: center; background: #0d1410; }
+#rotate p { margin: 0; font: 900 22px/1.2 var(--title); color: var(--gold); }
+#rotate small { font: 600 14px/1.4 var(--ui); color: var(--muted); }
+#rotate .phone { width: 44px; height: 76px; margin-bottom: 14px; border: 3px solid var(--gold); border-radius: 8px; animation: turn 2.2s ease-in-out infinite; }
+@keyframes turn { 0%, 25% { transform: rotate(0); } 55%, 100% { transform: rotate(-90deg); } }
+@media (orientation: portrait) { body.touch #rotate { display: grid; } }
+
+/* Barra de habilidades vira um leque de botões no canto inferior direito, ao alcance do polegar */
+body.touch #skillbar { left: auto; right: calc(10px + env(safe-area-inset-right)); bottom: 26px; transform: none; width: 214px; height: 158px; padding: 0; background: none; border: 0; box-shadow: none; }
+body.touch .slot { position: absolute; width: 58px; height: 58px; border-radius: 50%; pointer-events: auto; touch-action: none; border: 2px solid rgba(0,0,0,.7); box-shadow: 0 0 0 1px var(--gold-2), 0 3px 8px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.25); }
+body.touch .slot.pressed { transform: scale(.92); filter: brightness(1.3); }
+body.touch .slot[data-skill="combo"] { right: 0; bottom: 0; width: 82px; height: 82px; }
+body.touch .slot[data-skill="rasteira"] { right: 94px; bottom: 2px; }
+body.touch .slot[data-skill="meialua"] { right: 78px; bottom: 70px; }
+body.touch .slot[data-skill="dodge"] { right: 8px; bottom: 94px; }
+body.touch .slot.small { width: 44px; height: 44px; }
+body.touch .slot[data-skill="jump"] { right: 162px; bottom: 6px; }
+body.touch .slot[data-skill="target"] { right: 146px; bottom: 64px; }
+body.touch .slot[data-skill="interact"] { display: none; }   /* o aviso de interação vira o botão */
+body.touch .slot .pips { right: 50%; bottom: 7px; transform: translateX(50%); }
+body.touch .slot .cdText { font-size: 16px; }
+body.touch .slot kbd { display: none; }
+body.touch #interact { top: 54%; padding: 8px 16px; font-size: 15px; pointer-events: auto; touch-action: none; }
+body.touch #interact:not(.show) { pointer-events: none; }
+body.touch #interact.pressed { filter: brightness(1.4); }
+
+body.touch #playerFrame { left: calc(8px + env(safe-area-inset-left)); }
+body.touch #log { display: none; }
+body.touch #bossBar { bottom: auto; top: 50px; width: min(520px, 52vw); display: flex; flex-direction: column-reverse; }
+body.touch #castBar { margin: 4px 12% 0; }
+body.touch #hint { bottom: auto; top: 25%; max-width: 60vw; white-space: normal; text-align: center; font-size: 14px; }
+body.touch #toast { bottom: auto; top: 33%; }
+body.touch #banner { top: 30%; }
+
+/* Título no celular: legenda dos botões coloridos no lugar das teclas */
+.controls .dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; vertical-align: -1px; border: 1px solid #000; }
+.dot.stick { background: #c88a2a; } .dot.combo { background: #ffb24a; } .dot.q { background: #4aa8e8; }
+.dot.e { background: #b45ae8; } .dot.dodge { background: #6ac85a; } .dot.small { background: #6a7a8a; }
+
+/* Telas baixas (celular deitado, janela pequena): HUD e cartões compactos */
+@media (max-height: 520px) {
+  #playerFrame { top: 6px; width: min(250px, 34vw); }
+  #targetFrame { top: 56px; left: 10px; width: min(220px, 30vw); }
+  body.touch #targetFrame { left: calc(8px + env(safe-area-inset-left)); }
+  .badge { width: 44px; height: 44px; } .badge.small { width: 36px; height: 36px; }
+  .info { padding: 2px 6px 4px; } .name { font-size: 13px; } .hearts { font-size: 11px; }
+  .bar { height: 12px; margin-top: 2px; } .bar .val { font-size: 10px; }
+  #mapPanel { top: 6px; right: calc(8px + env(safe-area-inset-right)); width: 100px; padding: 3px; }
+  #minimap { width: 92px; height: 92px; }
+  #areaName { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #objectives { top: 122px; right: calc(8px + env(safe-area-inset-right)); bottom: auto; width: 190px; }
+  #objectives h3 { font-size: 11px; padding: 2px 6px; }
+  #objectives .quest { font-size: 11px; padding: 3px 6px 0; }
+  #objectives ul { padding: 2px 6px 5px; }
+  #objectives li { font-size: 11px; line-height: 1.3; }
+  body.touch #objectives { left: calc(8px + env(safe-area-inset-left)); right: auto; top: 104px; width: 200px; }   /* a direita é dos botões */
+  #log { display: none; }
+  #memoryBar { height: 16px; }
+  #memoryBar span { font-size: 10px; }
+  .card { padding: 14px 18px; }
+  .card:has(.hero-pick) { width: min(760px, 100%); }
+  .card h1 { margin: 4px 0; font-size: clamp(26px, 6vh, 40px); }
+  .card h1.quote { font-size: 22px; }
+  .card h2 { font-size: 24px; margin-bottom: 8px; }
+  .lead { font-size: 14px; margin-bottom: 8px; }
+  .kicker { font-size: 11px; }
+  .hero-pick { margin: 6px 0 4px; gap: 6px; }
+  .hero-pick .hero { padding: 6px 8px; font-size: 13px; }
+  .class-line { margin: 2px auto 8px; font-size: 12px; }
+  .controls { grid-template-columns: repeat(3, 1fr); max-width: none; gap: 2px 12px; margin-bottom: 8px; font-size: 12px; line-height: 1.5; }
+  .btn { margin: 5px auto; padding: 9px 16px; font-size: 15px; }
+  .btn.ghost { font-size: 13px; }
+  .note { margin-top: 6px; font-size: 11px; }
+  .studio-heading { left: 20px; top: 10px; } .studio-heading h1 { font-size: 30px; margin-top: 4px; } .studio-heading p { display: none; }
+  .studio-controls { top: 8px; bottom: 8px; right: 10px; width: 200px; padding: 10px; gap: 7px; overflow-y: auto; }
+}

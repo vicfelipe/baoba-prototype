@@ -32,6 +32,16 @@ As fontes vêm do Google Fonts; sem internet, o jogo usa fontes do sistema.
 | Roda do mouse | Zoom |
 | Esc | Pausa (volume, checkpoint, recomeçar) |
 
+### Celular e tablet
+
+Funciona no PC e no celular com a mesma build. Em aparelhos de toque (ou ao tocar a tela), `src/touch.js` liga os controles de toque; no PC nada muda.
+
+- **Tela deitada:** com o celular em pé, o jogo pausa e pede para girar. No Android, **Iniciar** também abre em tela cheia e trava a horizontal; no iPhone vale só o aviso.
+- **Mover:** arraste o polegar na metade esquerda da tela (joystick que nasce onde você toca).
+- **Ações:** os botões redondos à direita são a barra de habilidades: laranja golpeia, azul é o Q, roxo é o E, verde esquiva, cinza pula e a mira troca o alvo. Toque no inimigo para selecioná-lo, no aviso de interação para usar vestígio e memória, e em ❚❚ para pausar. Um toque na tela pula a cinemática.
+- **Desempenho:** em telas de toque a resolução vai até 1,5× e a sombra e o antisserrilhado ficam mais leves.
+- **Teste:** `node tools/shot-mobile.mjs` (celular deitado e em pé, mais o PC sem controles de toque).
+
 ## Estrutura
 
 | Arquivo | Conteúdo |
@@ -54,6 +64,7 @@ As fontes vêm do Google Fonts; sem internet, o jogo usa fontes do sistema.
 | `src/toon.js` | Materiais (cel nos personagens, Lambert pintado no cenário), contorno, shader de corrupção |
 | `src/textures.js` | Texturas pintadas geradas em canvas (grama, terra, piso, folhagem, samambaia, runas) |
 | `src/telegraph.js`, `src/fx.js`, `src/hud.js`, `src/audio.js` | Avisos, efeitos, interface, áudio sintetizado |
+| `src/touch.js` | Controles de toque: joystick, botões, pausa, aviso de girar e textos de ajuda sem teclas |
 
 No console do navegador, `__baoba.advance(segundos)` avança a simulação em passos fixos — usado nos testes automáticos.
 

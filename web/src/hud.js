@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { PLAYER } from './config.js';
 import { BOUNDS } from './world.js';
+import { forTouch, isTouch } from './touch.js';
 
 const $ = (s) => document.querySelector(s);
 // Ícones por herói (viewBox 48); a esquiva é a mesma. Cangaceiro: bacamarte, peixeira, pistolas.
@@ -287,20 +288,20 @@ export class HUD {
   }
 
   objectives(items) {
-    const key = JSON.stringify(items);
+    const key = JSON.stringify(items) + isTouch();
     if (key === this.lastObj) return;
     this.lastObj = key;
     this.obj.innerHTML = '';
     for (const it of items) {
       const li = document.createElement('li');
-      li.textContent = it.text;
+      li.textContent = forTouch(it.text);
       if (it.done) li.classList.add('done');
       this.obj.appendChild(li);
     }
   }
 
   hint(text, dur = 4) {
-    this.hintEl.textContent = text;
+    this.hintEl.textContent = forTouch(text);
     this.hintEl.classList.add('show');
     this.hintT = dur;
   }

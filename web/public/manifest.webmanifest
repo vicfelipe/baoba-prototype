@@ -1,0 +1,10 @@
+{
+  "name": "Baobá — O Eco da Mata",
+  "short_name": "Baobá",
+  "start_url": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#0d1410",
+  "theme_color": "#0d1410",
+  "lang": "pt-BR"
+}

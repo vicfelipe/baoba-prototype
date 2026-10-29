@@ -18,6 +18,7 @@ import { FX } from './fx.js';
 import { Audio } from './audio.js';
 import { HUD } from './hud.js';
 import { Input } from './input.js';
+import { setupTouch, blocked, enterLandscape } from './touch.js';
 import { buildLutador, lutadorPose } from './lutador.js';
 import { buildSkinnedCurupira, loadCurupiraAssets } from './curupira-asset.js';
 import { buildFragmento, animateFragmento } from './fragmento.js';
@@ -35,7 +36,7 @@ import { encounterCinematic, liberationCinematic } from './boss-cinematics.js';
 try {
   await Promise.all([loadCapoeiristaAsset(), loadCurupiraAssets(), loadCangaceiroAsset(), loadVaqueiroAsset(), loadMalokaAsset(), loadMulaAsset()]);
   document.getElementById('btnStart').disabled=false;
-  document.getElementById('btnStart').innerHTML='Iniciar <small>Enter</small>';
+  document.getElementById('btnStart').innerHTML='Iniciar <small class="key-only">Enter</small>';
   document.getElementById('btnLutador').disabled=false;
 } catch(error) {
   document.getElementById('btnStart').textContent='Falha ao carregar o personagem';
@@ -45,8 +46,10 @@ try {
 
 // ---------- Renderização ----------
 const canvas = document.getElementById('game');
+// Celular e tablet: menos pixels, sombra e amostras para manter o quadro leve na GPU móvel.
+const mobileGpu = matchMedia('(pointer: coarse)').matches;
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, mobileGpu ? 1.5 : 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -75,7 +78,7 @@ const hemi = new THREE.HemisphereLight('#eaf6ff', '#5f7f45', 1.35);
 scene.add(hemi);
 const sun = new THREE.DirectionalLight('#fff0d4', 2.7);
 sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.mapSize.setScalar(mobileGpu ? 1024 : 2048);
 sun.shadow.camera.left = -24;
 sun.shadow.camera.right = 24;
 sun.shadow.camera.top = 24;
@@ -106,7 +109,7 @@ function applyAtmosphere(k = 1) {
 
 // Pós-processamento: bloom para runas, cogumelos, chamas e efeitos
 const pr = renderer.getPixelRatio();
-const composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(window.innerWidth * pr, window.innerHeight * pr, { type: THREE.HalfFloatType, samples: 4 }));
+const composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(window.innerWidth * pr, window.innerHeight * pr, { type: THREE.HalfFloatType, samples: mobileGpu ? 2 : 4 }));
 composer.addPass(new RenderPass(scene, camera));
 const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth / 2, window.innerHeight / 2), 0.55, 0.55, 0.82);
 composer.addPass(bloom);
@@ -117,6 +120,7 @@ composer.addPass(grade);
 
 // ---------- Sistemas ----------
 const input = new Input(canvas);
+setupTouch(input);
 const studio=createLutadorStudio(renderer,input);
 const audio = new Audio();
 const hud = new HUD();
@@ -489,6 +493,10 @@ function updateGrade(dt) {
 
 function step(dt) {
 
+  if (blocked() && mode === 'play') {
+    mode = 'pause';
+    hud.screen('pause');
+  }
   if (input.pressed('pause')) {
     if (mode === 'play') {
       mode = 'pause';
@@ -547,11 +555,11 @@ function step(dt) {
     }
   }
 
-  // Cinemática: só chefe, herói (pose) e mundo animam; Enter, Esc ou Espaço pulam.
+  // Cinemática: só chefe, herói (pose) e mundo animam; Enter, Esc, Espaço ou toque na tela pulam.
   if (mode === 'cinematic') {
     worldTime += dt;
     prog.time += dt;
-    if (input.pressed('confirm') || input.pressed('pause') || input.pressed('jump')) cine.skip();
+    if (input.pressed('confirm') || input.pressed('pause') || input.pressed('jump') || input.pressed('Tap')) cine.skip();
     cine.update(dt);
     G.boss.update(dt);
     G.player.animate(dt);
@@ -703,7 +711,10 @@ function makePortraits() {
 }
 
 // ---------- Botões e ajustes ----------
-document.getElementById('btnStart').addEventListener('click', () => startLevel(level.key));
+document.getElementById('btnStart').addEventListener('click', () => {
+  enterLandscape();
+  startLevel(level.key);
+});
 document.querySelectorAll('.level-pick .level').forEach((b) => b.addEventListener('click', () => { if (mode === 'title') selectLevel(b.dataset.level); }));
 document.getElementById('btnLutador').addEventListener('click',()=>studio.open());
 document.querySelectorAll('[data-act]').forEach((b) => b.addEventListener('click', () => {
@@ -743,9 +754,7 @@ function selectHero(name) {
   hud.setHero(name, G.player.kit);
   const t = HERO_TEXT[name];
   document.getElementById('heroLine').innerHTML = t.line;
-  document.getElementById('ctlAttack').textContent = t.attack;
-  document.getElementById('ctlQ').textContent = t.q;
-  document.getElementById('ctlE').textContent = t.e;
+  for (const el of document.querySelectorAll('[data-ctl]')) el.textContent = t[el.dataset.ctl];
   document.querySelectorAll('.hero-pick .hero[data-hero]').forEach((b) => {
     const on = b.dataset.hero === name;
     b.classList.toggle('on', on);
