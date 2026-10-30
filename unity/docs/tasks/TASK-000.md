@@ -1,5 +1,10 @@
 # TASK-000 — Fundação do projeto
 
+Atualização 2026-10-29: a pendência de execução remota foi resolvida com
+SUCCESS no GitHub Actions 40978249556. Ver TASK-000-CI.md e CI_REMOTE.md.
+Os resultados abaixo registram a entrega inicial e suas pendências na época;
+não representam o estado atual da CI. Não se infere ratificação formal de ADRs.
+
 Data: 2026-10-29.
 Status: implementação e verificação local aprovadas pelos checks executados;
 tarefa incompleta para o gate de CI remota e ratificação humana da ADR.

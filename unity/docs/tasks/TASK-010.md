@@ -1,7 +1,9 @@
 # TASK-010 — Bootstrap, composition root, clock e catálogo
 
-Data: 2026-10-29. Status: implementada e validada localmente.
-M0 continua com CI remota e ratificações formais pendentes; não iniciar M1.
+Data: 2026-10-29. Status: implementada e validada localmente e na CI.
+Atualização: GitHub Actions 40978249556 SUCCESS; ver TASK-000-CI.md.
+O critério técnico de compilação/CI de M0 foi atendido. As seções abaixo
+registram a entrega inicial; ratificação formal de ADRs não é inferida.
 
 Task/US: TASK-010; base técnica para US-013/US-014, sem declarar essas
 histórias completas ou implementar histórias de gameplay.

@@ -23,17 +23,20 @@ sem triggers de forks/PR. Checkout e upload-artifact fixados por SHA. Token
 do job somente leitura, checkout sem persistência de credenciais. Artefatos
 públicos limitados aos relatórios NUnit; logs de licença/runner ficam locais.
 
-Execução exige Windows x64 com Editor Unity instalado/licenciado e variável
-de repositório UNITY_EDITOR_PATH. Não copiar licença/segredo para o GitHub.
-Runner efêmero com label baoba-unity permite um job e se desregistra, sem
-serviço Windows ou tarefa agendada permanente.
+Execução exige Windows x64 com Editor Unity instalado/licenciado. A variável
+UNITY_EDITOR_PATH é opcional, com fallback ao caminho já validado no host.
+Não copiar licença/segredo para o GitHub. O usuário cadastrou COMPUTADOR com
+labels padrão self-hosted/Windows/X64; o workflow usa essas labels e Windows
+PowerShell disponível. O agente não gerencia instalação/início do runner.
+Não presumir inscrição efêmera; esse modo depende de --ephemeral no cadastro.
 
 Cadastro automático foi bloqueado pela revisão automática de aprovação
 ("blocked by policy"). Não contornar. Fornecer configuração revisável e
-instruções para cadastro manual em CI_REMOTE.md; nenhuma execução remota
-é presumida. Download local do runner oficial 2.338.2 teve hash conferido.
+instruções para cadastro manual em CI_REMOTE.md. O usuário fez o cadastro e
+a CI passou na execução 40978249556, sem repetir o comando bloqueado.
+Download local do runner oficial 2.338.2 teve hash conferido.
 
 Os dois arquivos vercel.json recebem somente git.deploymentEnabled=false
 para esta branch, preservando configurações e comportamento de outras
-branches. Workflow não publica o jogo/site. Gate M0→M1 permanece pendente
-até haver resultado real da CI; aprovação formal das ADRs não é inferida.
+branches. Workflow não publica o jogo/site. O critério técnico de compilação/CI
+foi atendido na execução citada; aprovação formal das ADRs não é inferida.

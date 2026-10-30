@@ -8,7 +8,7 @@ que carrega a cena técnica vazia; ainda não há personagem ou combate.
 ## Ambiente
 
 - Unity **6000.3.27f1**, módulo Windows Build Support, licença autorizada.
-- Git + Git LFS; PowerShell 7 para os runners.
+- Git + Git LFS; Windows PowerShell 5.1 ou PowerShell 7 para os runners.
 - URP e pacotes fixados em Packages/manifest.json e packages-lock.json.
 - Resolução inicial de pacotes pode exigir internet. O jogo tem alvo offline.
 
@@ -45,13 +45,14 @@ Não é executado pela CI, para que configuração ausente cause falha.
 ## CI e licenças
 
 O [workflow](../.github/workflows/unity-foundation.yml) exige runner
-Windows próprio, label baoba-unity, PowerShell 7, Git LFS e
-UNITY_EDITOR_PATH configurados. Runner/licença/remote não são provisionados
-por este projeto. A integração CI é restrita à branch codex/unity-foundation-ci
+Windows próprio com labels self-hosted/Windows/X64, Git LFS e Unity licenciada.
+Usa Windows PowerShell e o Editor em D:\Unity\Editors\6000.3.27f1\Editor\Unity.exe;
+a variável de repositório UNITY_EDITOR_PATH pode sobrescrever esse caminho.
+A integração CI é restrita à branch codex/unity-foundation-ci
 e ao proprietário vicfelipe, sem triggers de PR. Não há deploy no workflow.
-Consulte [CI_REMOTE.md](docs/CI_REMOTE.md) para o cadastro manual do runner
-e a variável UNITY_EDITOR_PATH. O agente não cadastrou runner: o comando
-foi bloqueado pela revisão automática de aprovação. Antes de automatizar PRs,
+O usuário cadastrou o runner COMPUTADOR, e a execução de M0 passou no GitHub
+Actions. Consulte [CI_REMOTE.md](docs/CI_REMOTE.md) para resultados e operação.
+Antes de automatizar PRs,
 isolar o runner e definir uma política para código não confiável.
 
 Pacotes Unity: licenças nos respectivos LICENSE.md do PackageCache;
