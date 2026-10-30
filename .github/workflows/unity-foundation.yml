@@ -18,10 +18,10 @@ concurrency:
 jobs:
   foundation:
     if: github.repository == 'vicfelipe/baoba-prototype' && github.actor == 'vicfelipe' && github.ref == 'refs/heads/codex/unity-foundation-ci'
-    runs-on: [self-hosted, Windows, X64, baoba-unity]
+    runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 90
     env:
-      UNITY_EDITOR_PATH: ${{ vars.UNITY_EDITOR_PATH }}
+      UNITY_EDITOR_PATH: ${{ vars.UNITY_EDITOR_PATH || 'D:\Unity\Editors\6000.3.27f1\Editor\Unity.exe' }}
     defaults:
       run:
         shell: pwsh
