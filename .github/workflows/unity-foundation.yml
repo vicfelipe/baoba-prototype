@@ -24,7 +24,7 @@ jobs:
       UNITY_EDITOR_PATH: ${{ vars.UNITY_EDITOR_PATH || 'D:\Unity\Editors\6000.3.27f1\Editor\Unity.exe' }}
     defaults:
       run:
-        shell: pwsh
+        shell: powershell
         working-directory: unity
     steps:
       - name: Checkout reviewed Unity source
