@@ -2,5 +2,10 @@
   "installCommand": "if [ -d web ]; then cd web; fi && npm ci",
   "buildCommand": "if [ -d web ]; then cd web && npm run build -- --outDir ../dist --emptyOutDir; else npm run build; fi",
   "outputDirectory": "dist",
-  "framework": null
+  "framework": null,
+  "git": {
+    "deploymentEnabled": {
+      "codex/unity-foundation-ci": false
+    }
+  }
 }

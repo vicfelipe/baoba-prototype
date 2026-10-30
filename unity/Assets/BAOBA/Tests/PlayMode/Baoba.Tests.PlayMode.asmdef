@@ -1,0 +1,21 @@
+{
+  "name": "Baoba.Tests.PlayMode",
+  "rootNamespace": "Baoba.Tests.PlayMode",
+  "references": [
+    "Baoba.Core",
+    "Baoba.Content",
+    "Baoba.Unity"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
+}

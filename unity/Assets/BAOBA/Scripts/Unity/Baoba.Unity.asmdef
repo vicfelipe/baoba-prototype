@@ -1,0 +1,18 @@
+{
+  "name": "Baoba.Unity",
+  "rootNamespace": "Baoba.Unity",
+  "references": [
+    "Baoba.Core",
+    "Baoba.Gameplay",
+    "Baoba.Content"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
